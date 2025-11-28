@@ -296,7 +296,7 @@ export default function Home() {
           <div className="relative z-10">
             <div className="mb-8 text-center">
               <div className="inline-block px-6 py-3 bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-lg mb-6">
-                <p className="text-[#00f0ff] font-semibold">
+                <p className="text-[#00f0ff] font-semibold text-lg">
                   アプリ版限定の機能です。まずはホームに追加してください
                 </p>
               </div>
@@ -306,7 +306,8 @@ export default function Home() {
         </section>
       )}
 
-      {/* 機能紹介セクション */}
+      {/* 機能紹介セクション（ブラウザモード時のみ表示） */}
+      {!isPwa && (
       <section className="relative py-20 md:py-32 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
@@ -337,8 +338,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
-      {/* エントリーセクション */}
+      {/* エントリーセクション（ブラウザモード時のみ表示） */}
+      {!isPwa && (
       <section className="relative py-20 md:py-32 px-4 bg-gradient-to-b from-black via-gray-950 to-black">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,64,255,0.1),transparent_50%)]" />
         <div className="relative z-10 max-w-2xl mx-auto text-center">
@@ -419,6 +422,7 @@ export default function Home() {
           )}
         </div>
       </section>
+      )}
 
       {/* フッター */}
       <footer className="border-t border-gray-900 py-8 px-4">
