@@ -1,8 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import OneSignal from 'react-onesignal'
 import { createClient } from '@/utils/supabase/client'
+import InstallGuide from '@/components/InstallGuide'
+import { Bell, Zap, Shield, Sparkles, ArrowRight } from 'lucide-react'
+
+declare global {
+  interface Window {
+    OneSignalDeferred?: Array<(...args: any[]) => void>
+    OneSignal?: any
+  }
+}
 
 export default function Home() {
   const [isInitialized, setIsInitialized] = useState(false)
@@ -20,20 +28,32 @@ export default function Home() {
           return
         }
 
-        // react-onesignalの初期化
-        OneSignal.initialize(appId, {
-          allowLocalhostAsSecureOrigin: true,
+        // OneSignal SDKが読み込まれるまで待機
+        await new Promise<void>((resolve) => {
+          if (window.OneSignal) {
+            resolve()
+            return
+          }
+          window.OneSignalDeferred = window.OneSignalDeferred || []
+          window.OneSignalDeferred.push(() => {
+            resolve()
+          })
         })
 
-        // 初期化が完了するまで少し待つ
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        // 初期化
+        await window.OneSignal.init({
+          appId: appId,
+          allowLocalhostAsSecureOrigin: true,
+          serviceWorkerParam: { scope: '/' },
+          serviceWorkerPath: '/OneSignalSDKWorker.js',
+        })
 
         setIsInitialized(true)
 
         // 既に通知が許可されているか確認
         try {
-          const isEnabled = await OneSignal.isPushNotificationsEnabled()
-          if (isEnabled) {
+          const permission = await window.OneSignal.Notifications.permissionNative
+          if (permission) {
             setIsSubscribed(true)
           }
         } catch (error) {
@@ -58,24 +78,23 @@ export default function Home() {
     setMessage('')
 
     try {
-      // OneSignalインスタンスが利用可能か確認
-      const oneSignalInstance = OneSignal.getOneSignalInstance()
-      if (!oneSignalInstance) {
+      // OneSignalが利用可能か確認
+      if (!window.OneSignal) {
         alert('OneSignalが初期化されていません。ページを再読み込みしてください。')
         setIsLoading(false)
         return
       }
 
       // 通知許可を求める
-      await OneSignal.showSlidedownPrompt()
+      await window.OneSignal.Slidedown.promptPush()
 
       // 少し待ってから許可状態を確認
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // 許可が得られたか確認
-      const isEnabled = await OneSignal.isPushNotificationsEnabled()
+      const permission = await window.OneSignal.Notifications.permissionNative
       
-      if (!isEnabled) {
+      if (!permission) {
         alert('通知が許可されませんでした。')
         setIsLoading(false)
         return
@@ -85,7 +104,7 @@ export default function Home() {
       let playerId = null
       for (let i = 0; i < 3; i++) {
         try {
-          playerId = await OneSignal.getPlayerId()
+          playerId = await window.OneSignal.User.PushSubscription.id
           if (playerId) break
         } catch (error) {
           console.log(`Player ID取得試行 ${i + 1} 失敗:`, error)
@@ -127,73 +146,171 @@ export default function Home() {
     }
   }
 
+  const features = [
+    {
+      icon: Shield,
+      title: 'メアド登録不要',
+      description: 'アカウント作成もメールアドレスも不要。ボタンひとつで即スタート。',
+      color: 'from-[#00f0ff] to-[#0040ff]',
+    },
+    {
+      icon: Zap,
+      title: '習慣化の自動化',
+      description: 'AIコーチがあなたの学習ペースを最適化。3日目、7日目と自動で応援メッセージが届きます。',
+      color: 'from-[#0040ff] to-[#00f0ff]',
+    },
+    {
+      icon: Sparkles,
+      title: '完全パーソナライズ',
+      description: 'あなたの学習データから最適なタイミングで、最適なメッセージを配信します。',
+      color: 'from-[#00f0ff] to-[#0040ff]',
+    },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-        <div className="mb-6">
-          <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-10 h-10 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </svg>
+    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+      {/* ヒーローセクション */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 py-20 md:py-32">
+        {/* 背景グラデーション */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00f0ff]/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#0040ff]/10 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#00f0ff]/5 rounded-full blur-3xl" />
+        </div>
+
+        {/* 幾何学模様 */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-10 w-2 h-2 bg-[#00f0ff] rounded-full" />
+          <div className="absolute top-40 right-20 w-1 h-1 bg-[#00f0ff] rounded-full" />
+          <div className="absolute bottom-40 left-20 w-1.5 h-1.5 bg-[#0040ff] rounded-full" />
+          <div className="absolute bottom-20 right-10 w-2 h-2 bg-[#0040ff] rounded-full" />
+        </div>
+
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
+          <div className="mb-8 inline-block">
+            <Bell className="w-16 h-16 md:w-20 md:h-20 text-[#00f0ff] mx-auto animate-pulse" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            コーチング通知アプリ
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight">
+            その学習、
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] to-[#0040ff]">
+              通知ひとつで変わる。
+            </span>
           </h1>
-          <p className="text-gray-600">
-            {isSubscribed
-              ? '通知の登録が完了しています'
-              : '学習を継続するための通知を受け取りましょう'}
+          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+            アプリを開く必要すらありません。
+            <br />
+            AIコーチがあなたのポケットに入り込みます。
           </p>
         </div>
+      </section>
 
-        {message && (
-          <div
-            className={`mb-4 p-3 rounded-lg ${
-              message.includes('完了')
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
-        {!isSubscribed && (
-          <button
-            onClick={handleSubscribe}
-            disabled={isLoading || !isInitialized}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-xl transition-colors duration-200 shadow-md hover:shadow-lg"
-          >
-            {isLoading ? '処理中...' : '通知を受け取る'}
-          </button>
-        )}
-
-        {isSubscribed && (
-          <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-            <p className="text-green-800 font-medium">
-              ✓ 通知の設定が完了しました
-            </p>
-            <p className="text-sm text-green-600 mt-2">
-              これから学習のサポート通知をお届けします。
-            </p>
-          </div>
-        )}
-
-        <div className="mt-6 text-sm text-gray-500">
-          <p>登録は無料で、いつでも停止できます。</p>
+      {/* インストールガイドセクション */}
+      <section className="relative py-20 md:py-32 px-4 bg-gradient-to-b from-black via-gray-950 to-black">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,240,255,0.05),transparent_50%)]" />
+        <div className="relative z-10">
+          <InstallGuide />
         </div>
-      </div>
+      </section>
+
+      {/* 機能紹介セクション */}
+      <section className="relative py-20 md:py-32 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              なぜ選ばれるのか
+            </h2>
+            <p className="text-gray-400 text-lg">
+              無駄を削ぎ落とした、最速の学習体験
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {features.map((feature, index) => {
+              const Icon = feature.icon
+              return (
+                <div
+                  key={index}
+                  className="group relative bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-[#00f0ff]/50 transition-all duration-300 hover:transform hover:scale-105"
+                >
+                  <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
+                  <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* エントリーセクション */}
+      <section className="relative py-20 md:py-32 px-4 bg-gradient-to-b from-black via-gray-950 to-black">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,64,255,0.1),transparent_50%)]" />
+        <div className="relative z-10 max-w-2xl mx-auto text-center">
+          {message && (
+            <div
+              className={`mb-6 p-4 rounded-lg ${
+                message.includes('完了') || message.includes('登録')
+                  ? 'bg-green-900/50 border border-green-500/50 text-green-300'
+                  : 'bg-red-900/50 border border-red-500/50 text-red-300'
+              }`}
+            >
+              {message}
+            </div>
+          )}
+
+          {isSubscribed ? (
+            <div className="bg-gray-900 border border-[#00f0ff]/50 rounded-2xl p-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#00f0ff] to-[#0040ff] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Bell className="w-8 h-8 text-black" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                登録完了
+              </h3>
+              <p className="text-gray-400">
+                これから学習のサポート通知をお届けします。
+              </p>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                準備ができたら、
+                <br />
+                通知を受け取ってスタート
+              </h2>
+              <p className="text-gray-400 mb-8 text-lg">
+                登録は無料で、いつでも停止できます
+              </p>
+              <button
+                onClick={handleSubscribe}
+                disabled={isLoading || !isInitialized}
+                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00f0ff] to-[#0040ff] text-black font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-[#00f0ff]/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <span>処理中...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>通知を受け取る</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* フッター */}
+      <footer className="border-t border-gray-900 py-8 px-4">
+        <div className="max-w-4xl mx-auto text-center text-gray-500 text-sm">
+          <p>© 2024 次世代コーチングアプリ. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   )
 }
-

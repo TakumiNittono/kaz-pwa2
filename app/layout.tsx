@@ -1,11 +1,15 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Noto_Sans_JP } from 'next/font/google'
 import './globals.css'
 import Script from 'next/script'
 import PWAInstall from './pwa-install'
 import RegisterSW from './register-sw'
 
-const inter = Inter({ subsets: ['latin'] })
+const notoSansJP = Noto_Sans_JP({
+  subsets: ['latin'],
+  weight: ['400', '500', '700', '900'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'コーチング通知アプリ',
@@ -48,7 +52,24 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="コーチング通知アプリ" />
       </head>
-      <body className={inter.className}>
+      <body className={notoSansJP.className}>
+        <Script
+          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+          strategy="afterInteractive"
+        />
+        <Script id="onesignal-init" strategy="afterInteractive">
+          {`
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function(OneSignal) {
+              await OneSignal.init({
+                appId: "${appId}",
+                allowLocalhostAsSecureOrigin: true,
+                serviceWorkerParam: { scope: "/" },
+                serviceWorkerPath: "/OneSignalSDKWorker.js",
+              });
+            });
+          `}
+        </Script>
         {children}
         <PWAInstall />
         <RegisterSW />
