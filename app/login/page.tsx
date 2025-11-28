@@ -24,7 +24,23 @@ export default function LoginPage() {
       })
 
       if (signInError) {
-        setError('メールアドレスまたはパスワードが正しくありません。')
+        // エラーメッセージを詳細化
+        let errorMessage = 'メールアドレスまたはパスワードが正しくありません。'
+        
+        // メール確認が必要な場合
+        if (signInError.message?.includes('Email not confirmed') || signInError.message?.includes('email_not_confirmed')) {
+          errorMessage = 'メールアドレスの確認が必要です。Supabaseダッシュボードで「Send confirmation email」をクリックするか、「Auto Confirm User」にチェックを入れてユーザーを再作成してください。'
+        }
+        // パスワードが間違っている場合
+        else if (signInError.message?.includes('Invalid login credentials') || signInError.message?.includes('invalid_credentials')) {
+          errorMessage = 'メールアドレスまたはパスワードが正しくありません。'
+        }
+        // その他のエラー
+        else {
+          errorMessage = `ログインエラー: ${signInError.message}`
+        }
+        
+        setError(errorMessage)
         setIsLoading(false)
         return
       }
