@@ -59,6 +59,20 @@ export default function Home() {
     }
   }, [])
 
+  // OneSignal SDKの待機処理を共通化
+  const waitForOneSignal = async (): Promise<void> => {
+    await new Promise<void>((resolve) => {
+      if (window.OneSignal) {
+        resolve()
+        return
+      }
+      window.OneSignalDeferred = window.OneSignalDeferred || []
+      window.OneSignalDeferred.push(() => {
+        resolve()
+      })
+    })
+  }
+
   useEffect(() => {
     // PWAモードの時のみOneSignalの状態を確認
     if (!isPwa) return
@@ -66,16 +80,7 @@ export default function Home() {
     const checkOneSignalStatus = async () => {
       try {
         // OneSignal SDKが読み込まれるまで待機（layout.tsxで初期化される）
-        await new Promise<void>((resolve) => {
-          if (window.OneSignal) {
-            resolve()
-            return
-          }
-          window.OneSignalDeferred = window.OneSignalDeferred || []
-          window.OneSignalDeferred.push(() => {
-            resolve()
-          })
-        })
+        await waitForOneSignal()
 
         // 少し待ってから状態を確認（初期化完了を待つ）
         await new Promise((resolve) => setTimeout(resolve, 2000))
@@ -110,16 +115,7 @@ export default function Home() {
 
     const fetchUnreadCount = async () => {
       try {
-        await new Promise<void>((resolve) => {
-          if (window.OneSignal) {
-            resolve()
-            return
-          }
-          window.OneSignalDeferred = window.OneSignalDeferred || []
-          window.OneSignalDeferred.push(() => {
-            resolve()
-          })
-        })
+        await waitForOneSignal()
 
         await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -159,19 +155,21 @@ export default function Home() {
 
     try {
       // OneSignalが利用可能か確認
+      await waitForOneSignal()
+      
       if (!window.OneSignal) {
-        alert('通知サービスを準備中です。しばらく待ってから再度お試しください。')
+        setMessage('通知サービスを準備中です。しばらく待ってから再度お試しください。')
         setIsLoading(false)
         return
       }
 
-      // 通知許可を求める（エラーは無視）
+      // 通知許可を求める
       try {
         await window.OneSignal.Slidedown.promptPush()
       } catch (error: any) {
         // ドメイン設定エラーの場合は、ユーザーに分かりやすいメッセージを表示
         if (error?.message?.includes('Can only be used on')) {
-          alert('通知機能は現在準備中です。しばらくお待ちください。')
+          setMessage('通知機能は現在準備中です。しばらくお待ちください。')
           setIsLoading(false)
           return
         }
@@ -190,7 +188,7 @@ export default function Home() {
       }
       
       if (!permission) {
-        alert('通知が許可されませんでした。')
+        setMessage('通知が許可されませんでした。設定から通知を許可してください。')
         setIsLoading(false)
         return
       }
@@ -210,7 +208,7 @@ export default function Home() {
       }
 
       if (!playerId) {
-        alert('通知機能は現在準備中です。しばらくお待ちください。')
+        setMessage('通知機能は現在準備中です。しばらくお待ちください。')
         setIsLoading(false)
         return
       }
@@ -226,20 +224,29 @@ export default function Home() {
 
       if (error) {
         console.error('Supabase error:', error)
-        alert('登録に失敗しました。もう一度お試しください。')
+        setMessage('登録に失敗しました。もう一度お試しください。')
         setIsLoading(false)
         return
       }
 
       setIsSubscribed(true)
-      alert('登録しました！')
+      setMessage('登録しました！')
+      
+      // 通知許可後、指定のURLに遷移（アラート表示後に遷移）
+      // セキュリティチェック: 許可されたドメインのみ遷移
+      const redirectUrl = 'https://utage-system.com/p/zwvVkDBzc2wb'
+      if (redirectUrl.startsWith('https://')) {
+        // 成功メッセージを表示してから遷移（1秒待機）
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        window.location.href = redirectUrl
+      }
     } catch (error: any) {
       // ドメイン設定エラーの場合は、ユーザーに分かりやすいメッセージを表示
       if (error?.message?.includes('Can only be used on')) {
-        alert('通知機能は現在準備中です。しばらくお待ちください。')
+        setMessage('通知機能は現在準備中です。しばらくお待ちください。')
       } else {
-        console.log('Subscribe error:', error)
-        alert('通知の登録中にエラーが発生しました。')
+        console.error('Subscribe error:', error)
+        setMessage('通知の登録中にエラーが発生しました。もう一度お試しください。')
       }
     } finally {
       setIsLoading(false)
@@ -319,6 +326,19 @@ export default function Home() {
             <br />
             AIコーチがあなたのポケットに入り込みます。
           </p>
+
+          {/* メッセージ表示（PWAモード時） */}
+          {isPwa && message && (
+            <div
+              className={`mb-6 p-4 rounded-lg max-w-md mx-auto ${
+                message.includes('完了') || message.includes('登録')
+                  ? 'bg-green-900/50 border border-green-500/50 text-green-300'
+                  : 'bg-red-900/50 border border-red-500/50 text-red-300'
+              }`}
+            >
+              {message}
+            </div>
+          )}
 
           {/* PWAモードの時のみ、通知ボタンを表示 */}
           {isPwa && !isSubscribed && (

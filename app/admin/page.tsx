@@ -325,8 +325,16 @@ export default function AdminDashboard() {
         {/* ステップ配信の手動実行 */}
         <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">ステップ配信</h2>
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-800 font-semibold mb-1">
+              ✓ 自動実行が有効です
+            </p>
+            <p className="text-xs text-green-700">
+              毎日UTC 22:00（日本時間 07:00）に自動的に実行されます。8つの時間ウィンドウ（1時間後、1日後、2日後...7日後）のユーザーに通知を送信します。
+            </p>
+          </div>
           <p className="text-gray-600 mb-4 text-sm">
-            手動でステップ配信を実行します。通常は毎日UTC 22:00に自動実行されます。
+            テストや緊急時には、下のボタンで手動実行も可能です。
           </p>
           <button
             onClick={handleRunStepMail}

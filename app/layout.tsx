@@ -15,7 +15,11 @@ export const metadata: Metadata = {
   title: 'コーチング通知アプリ',
   description: 'プッシュ通知を受け取って、学習を継続しましょう',
   manifest: '/manifest.json',
-  themeColor: '#3b82f6',
+  themeColor: '#00f0ff',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -48,6 +52,8 @@ export default function RootLayout({
     <html lang="ja">
       <head>
         <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="コーチング通知アプリ" />
