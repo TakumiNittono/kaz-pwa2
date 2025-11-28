@@ -218,7 +218,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
       {/* ヒーローセクション */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 py-0">
+      <section className="relative h-screen flex items-center justify-center px-4">
         {/* 背景グラデーション */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00f0ff]/10 rounded-full blur-3xl animate-pulse" />
@@ -235,17 +235,17 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="mb-8 inline-block">
+          <div className="mb-6 inline-block">
             <Bell className="w-16 h-16 md:w-20 md:h-20 text-[#00f0ff] mx-auto animate-pulse" />
           </div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-4 leading-tight">
             その学習、
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] to-[#0040ff]">
               通知ひとつで変わる。
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
             アプリを開く必要すらありません。
             <br />
             AIコーチがあなたのポケットに入り込みます。
