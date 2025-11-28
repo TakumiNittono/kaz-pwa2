@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   themeColor: '#00f0ff',
   icons: {
     icon: '/icon.svg',
-    apple: '/icon-192.png',
+    apple: '/icon-180.png',
   },
   appleWebApp: {
     capable: true,
@@ -53,7 +53,11 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/icon-180.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="コーチング通知アプリ" />
