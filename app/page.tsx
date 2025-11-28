@@ -11,26 +11,34 @@ export default function Home() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const initializeOneSignal = () => {
+    const initializeOneSignal = async () => {
       try {
         const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID
         if (!appId) {
           console.error('OneSignal App ID is not configured')
+          setMessage('OneSignal App IDが設定されていません。')
           return
         }
 
+        // react-onesignalの初期化
         OneSignal.initialize(appId, {
           allowLocalhostAsSecureOrigin: true,
         })
 
+        // 初期化が完了するまで少し待つ
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
         setIsInitialized(true)
 
         // 既に通知が許可されているか確認
-        OneSignal.isPushNotificationsEnabled().then((enabled) => {
-          if (enabled) {
+        try {
+          const isEnabled = await OneSignal.isPushNotificationsEnabled()
+          if (isEnabled) {
             setIsSubscribed(true)
           }
-        })
+        } catch (error) {
+          console.log('Push notification status check:', error)
+        }
       } catch (error) {
         console.error('OneSignal initialization error:', error)
         setMessage('通知サービスの初期化に失敗しました。')
@@ -50,8 +58,19 @@ export default function Home() {
     setMessage('')
 
     try {
+      // OneSignalインスタンスが利用可能か確認
+      const oneSignalInstance = OneSignal.getOneSignalInstance()
+      if (!oneSignalInstance) {
+        alert('OneSignalが初期化されていません。ページを再読み込みしてください。')
+        setIsLoading(false)
+        return
+      }
+
       // 通知許可を求める
       await OneSignal.showSlidedownPrompt()
+
+      // 少し待ってから許可状態を確認
+      await new Promise((resolve) => setTimeout(resolve, 1500))
 
       // 許可が得られたか確認
       const isEnabled = await OneSignal.isPushNotificationsEnabled()
@@ -62,8 +81,19 @@ export default function Home() {
         return
       }
 
-      // Player IDを取得
-      const playerId = await OneSignal.getPlayerId()
+      // Player IDを取得（複数回試行）
+      let playerId = null
+      for (let i = 0; i < 3; i++) {
+        try {
+          playerId = await OneSignal.getPlayerId()
+          if (playerId) break
+        } catch (error) {
+          console.log(`Player ID取得試行 ${i + 1} 失敗:`, error)
+        }
+        if (i < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+        }
+      }
 
       if (!playerId) {
         alert('Player IDの取得に失敗しました。少し待ってから再度お試しください。')
