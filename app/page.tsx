@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import InstallGuide from '@/components/InstallGuide'
 import { Bell, Zap, Shield, Sparkles, ArrowRight, Check } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 declare global {
   interface Window {
@@ -13,11 +14,13 @@ declare global {
 }
 
 export default function Home() {
+  const router = useRouter()
   const [isInitialized, setIsInitialized] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [isPwa, setIsPwa] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   // PWAモード判定
   useEffect(() => {
@@ -100,6 +103,55 @@ export default function Home() {
 
     checkOneSignalStatus()
   }, [isPwa])
+
+  // 未読通知数を取得
+  useEffect(() => {
+    if (!isPwa || !isSubscribed) return
+
+    const fetchUnreadCount = async () => {
+      try {
+        await new Promise<void>((resolve) => {
+          if (window.OneSignal) {
+            resolve()
+            return
+          }
+          window.OneSignalDeferred = window.OneSignalDeferred || []
+          window.OneSignalDeferred.push(() => {
+            resolve()
+          })
+        })
+
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        if (!window.OneSignal) return
+
+        let playerId: string | null = null
+        try {
+          playerId = await window.OneSignal.User.PushSubscription.id
+        } catch (error) {
+          return
+        }
+
+        if (!playerId) return
+
+        const response = await fetch(
+          `/api/notifications?onesignal_id=${encodeURIComponent(playerId)}`
+        )
+
+        if (response.ok) {
+          const data = await response.json()
+          setUnreadCount(data.unreadCount || 0)
+        }
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error)
+      }
+    }
+
+    fetchUnreadCount()
+    // 30秒ごとに更新
+    const interval = setInterval(fetchUnreadCount, 30000)
+    return () => clearInterval(interval)
+  }, [isPwa, isSubscribed])
 
   const handleSubscribe = async () => {
     setIsLoading(true)
@@ -235,6 +287,23 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
+          {/* 通知履歴へのリンク（PWAモードで登録済みの場合） */}
+          {isPwa && isSubscribed && (
+            <div className="absolute top-4 right-4">
+              <button
+                onClick={() => router.push('/notifications')}
+                className="relative inline-flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg hover:border-[#00f0ff]/50 transition-all"
+              >
+                <Bell className="w-5 h-5 text-[#00f0ff]" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#00f0ff] text-black text-xs font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
+
           <div className="mb-6 inline-block">
             <Bell className="w-16 h-16 md:w-20 md:h-20 text-[#00f0ff] mx-auto animate-pulse" />
           </div>

@@ -51,98 +51,192 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 3日前の日付を計算
-    const threeDaysAgo = new Date()
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
-    const threeDaysAgoDate = threeDaysAgo.toISOString().split('T')[0] // YYYY-MM-DD形式
+    // ベースURLを取得（環境変数から、またはデフォルト値を使用）
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://kaz-pwa2.vercel.app')
 
-    // 翌日の日付（範囲指定のため）
-    const nextDay = new Date(threeDaysAgo)
-    nextDay.setDate(nextDay.getDate() + 1)
-    const nextDayDate = nextDay.toISOString().split('T')[0]
-
-    // Supabaseから対象ユーザーを取得
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-    const { data: profiles, error: queryError } = await supabase
-      .from('profiles')
-      .select('onesignal_id')
-      .gte('created_at', `${threeDaysAgoDate}T00:00:00.000Z`)
-      .lt('created_at', `${nextDayDate}T00:00:00.000Z`)
-
-    if (queryError) {
-      console.error('Failed to fetch profiles:', queryError)
-      return NextResponse.json(
-        { error: 'ユーザー情報の取得に失敗しました' },
-        { status: 500 }
-      )
-    }
-
-    if (!profiles || profiles.length === 0) {
-      return NextResponse.json(
-        {
-          success: true,
-          message: '3日前に登録されたユーザーは見つかりませんでした',
-          count: 0,
-        },
-        {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-    }
-
-    // OneSignal Player IDのリストを取得
-    const playerIds = profiles
-      .map((profile) => profile.onesignal_id)
-      .filter((id): id is string => Boolean(id))
-
-    if (playerIds.length === 0) {
-      return NextResponse.json(
-        {
-          success: true,
-          message: '有効なPlayer IDが見つかりませんでした',
-          count: 0,
-        },
-        {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-    }
+    // ステップ配信の設定: 時間ウィンドウとメッセージの定義
+    const stepConfigs = [
+      {
+        hours: 1,
+        title: '通知設定完了！',
+        message: '通知設定完了！早速ですが、最初のミッションです。',
+        url: `${baseUrl}/lessons/day1`,
+      },
+      {
+        hours: 24, // 1日
+        title: '【Day 1】',
+        message: '【Day 1】新しい習慣を始めましょう。',
+        url: `${baseUrl}/lessons/day1`,
+      },
+      {
+        hours: 48, // 2日
+        title: '【Day 2】',
+        message: '【Day 2】2日目も頑張っていますね！継続が力になります。',
+        url: `${baseUrl}/lessons/day1`, // Day 2のページができたら変更
+      },
+      {
+        hours: 72, // 3日
+        title: '【Day 3】',
+        message: '【Day 3】3日坊主をクリアしました！',
+        url: `${baseUrl}/lessons/day1`, // Day 3のページができたら変更
+      },
+      {
+        hours: 96, // 4日
+        title: '【Day 4】',
+        message: '【Day 4】4日目も順調です！習慣が定着してきていますね。',
+        url: `${baseUrl}/lessons/day1`, // Day 4のページができたら変更
+      },
+      {
+        hours: 120, // 5日
+        title: '【Day 5】',
+        message: '【Day 5】5日目、素晴らしい継続力です！',
+        url: `${baseUrl}/lessons/day1`, // Day 5のページができたら変更
+      },
+      {
+        hours: 144, // 6日
+        title: '【Day 6】',
+        message: '【Day 6】あと1日で1週間です！最後まで頑張りましょう。',
+        url: `${baseUrl}/lessons/day1`, // Day 6のページができたら変更
+      },
+      {
+        hours: 168, // 7日
+        title: '【1週間突破】',
+        message: '【1週間突破】あなたに特別なご褒美が届いています！',
+        url: `${baseUrl}/lessons/day1`, // 1週間突破の特別ページができたら変更
+      },
+    ]
 
     // OneSignalクライアントの初期化
     const client = new OneSignalClient(appId, restApiKey)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // ステップ配信用メッセージ
-    const title = '学習3日目おめでとうございます！'
-    const message = '継続は力なり！3日間よく頑張りました。今日も一緒に学習を進めましょう。応援しています！'
+    const results: Array<{
+      step: string
+      count: number
+      notificationId?: string
+    }> = []
 
-    // 対象ユーザーに通知を送信
-    const notification = {
-      contents: {
-        en: message,
-        ja: message,
-      },
-      headings: {
-        en: title,
-        ja: title,
-      },
-      include_player_ids: playerIds, // 特定のPlayer IDリストに送信
+    const now = new Date()
+
+    // 各ステップ配信を処理
+    for (const config of stepConfigs) {
+      try {
+        // 現在時刻からN時間前の範囲を計算
+        // 例: 1時間後の場合、現在から1時間〜2時間前に登録されたユーザーを検索
+        // 例: 1日後の場合、現在から24時間〜25時間前に登録されたユーザーを検索
+        const targetTimeStart = new Date(now.getTime() - (config.hours + 1) * 60 * 60 * 1000)
+        const targetTimeEnd = new Date(now.getTime() - config.hours * 60 * 60 * 1000)
+
+        // 1時間のウィンドウ内で登録されたユーザーを検索
+        const { data: profiles, error: queryError } = await supabase
+          .from('profiles')
+          .select('onesignal_id')
+          .gte('created_at', targetTimeStart.toISOString())
+          .lt('created_at', targetTimeEnd.toISOString())
+
+        if (queryError) {
+          console.error(`Failed to fetch profiles for ${config.hours} hours:`, queryError)
+          continue
+        }
+
+        if (!profiles || profiles.length === 0) {
+          results.push({
+            step: `${config.hours}時間後`,
+            count: 0,
+          })
+          continue
+        }
+
+        // OneSignal Player IDのリストを取得
+        const playerIds = profiles
+          .map((profile) => profile.onesignal_id)
+          .filter((id): id is string => Boolean(id))
+
+        if (playerIds.length === 0) {
+          results.push({
+            step: `${config.hours}時間後`,
+            count: 0,
+          })
+          continue
+        }
+
+        // 対象ユーザーに通知を送信
+        const notification: any = {
+          contents: {
+            en: config.message,
+            ja: config.message,
+          },
+          headings: {
+            en: config.title,
+            ja: config.title,
+          },
+          include_player_ids: playerIds,
+        }
+
+        // URLが設定されている場合は追加
+        if (config.url) {
+          notification.url = config.url
+        }
+
+        const response = await client.createNotification(notification)
+
+        // 通知履歴をSupabaseに保存（各ユーザーごと）
+        if (response.body?.id && playerIds.length > 0) {
+          try {
+            // ステップ配信の通知履歴を保存
+            const notificationRecords = playerIds.map((playerId) => ({
+              onesignal_id: playerId,
+              title: config.title,
+              message: config.message,
+              url: config.url || null,
+              step_hours: config.hours,
+              sent_at: new Date().toISOString(),
+            }))
+
+            // バッチで一括挿入（パフォーマンス向上のため）
+            const { error: dbError } = await supabase
+              .from('user_notifications')
+              .insert(notificationRecords)
+
+            if (dbError) {
+              console.error(`Failed to save notification history for ${config.hours} hours:`, dbError)
+              // 通知は送信されているので、履歴保存のエラーは警告として扱う
+            } else {
+              console.log(
+                `Step mail sent and saved: ${config.hours} hours, ${playerIds.length} users, notification ID: ${response.body?.id}`
+              )
+            }
+          } catch (dbError) {
+            console.error(`Failed to save notification history for ${config.hours} hours:`, dbError)
+            // 通知は送信されているので、履歴保存のエラーは警告として扱う
+          }
+        }
+
+        results.push({
+          step: `${config.hours}時間後`,
+          count: playerIds.length,
+          notificationId: response.body?.id,
+        })
+      } catch (error) {
+        console.error(`Error processing step ${config.hours} hours:`, error)
+        results.push({
+          step: `${config.hours}時間後`,
+          count: 0,
+        })
+      }
     }
 
-    const response = await client.createNotification(notification)
+    // 結果を集計
+    const totalCount = results.reduce((sum, result) => sum + result.count, 0)
+    const successCount = results.filter((r) => r.count > 0).length
 
     return NextResponse.json(
       {
         success: true,
-        message: 'ステップ配信が完了しました',
-        count: playerIds.length,
-        notificationId: response.body?.id,
+        message: `ステップ配信が完了しました（${successCount}/${stepConfigs.length}ステップ実行）`,
+        totalCount,
+        results,
       },
       {
         status: 200,
