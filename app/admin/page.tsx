@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 
@@ -10,6 +10,29 @@ export default function AdminDashboard() {
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [totalUsers, setTotalUsers] = useState<number | null>(null)
+
+  useEffect(() => {
+    const fetchTotalUsers = async () => {
+      try {
+        const supabase = createClient()
+        const { count, error } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+
+        if (error) {
+          console.error('Error fetching total users:', error)
+          return
+        }
+
+        setTotalUsers(count)
+      } catch (error) {
+        console.error('Error fetching total users:', error)
+      }
+    }
+
+    fetchTotalUsers()
+  }, [])
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -134,6 +157,20 @@ export default function AdminDashboard() {
             <p className="text-sm text-blue-800">
               <strong>注意:</strong> この通知は、通知を許可した全ユーザーに配信されます。
             </p>
+          </div>
+        </div>
+
+        {/* 登録者総数表示 */}
+        <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">登録者情報</h2>
+          <div className="flex items-center gap-4">
+            <div className="text-4xl font-bold text-blue-600">
+              {totalUsers !== null ? totalUsers.toLocaleString() : '---'}
+            </div>
+            <div className="text-gray-600">
+              <p className="text-lg font-medium">登録者総数</p>
+              <p className="text-sm">通知を許可したユーザー数</p>
+            </div>
           </div>
         </div>
       </div>

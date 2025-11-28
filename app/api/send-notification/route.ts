@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         en: sanitizedTitle,
         ja: sanitizedTitle,
       },
-      included_segments: ['Subscribed Users'], // すべての購読済みユーザーに送信
+      included_segments: ['All'], // すべてのユーザーに送信
     }
 
     const response = await client.createNotification(notification)

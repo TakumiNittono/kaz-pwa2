@@ -1,14 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import OneSignal from 'react-onesignal'
 import { createClient } from '@/utils/supabase/client'
-
-declare global {
-  interface Window {
-    OneSignalDeferred?: Array<(...args: any[]) => void>
-    OneSignal?: any
-  }
-}
 
 export default function Home() {
   const [isInitialized, setIsInitialized] = useState(false)
@@ -17,116 +11,62 @@ export default function Home() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const checkOneSignalStatus = async () => {
+    const initializeOneSignal = () => {
       try {
-        // OneSignalが初期化されるまで待機
-        await new Promise<void>((resolve) => {
-          if (window.OneSignal) {
-            resolve()
-            return
-          }
-          window.OneSignalDeferred?.push(() => {
-            resolve()
-          })
+        const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID
+        if (!appId) {
+          console.error('OneSignal App ID is not configured')
+          return
+        }
+
+        OneSignal.initialize(appId, {
+          allowLocalhostAsSecureOrigin: true,
         })
 
-        // 少し待ってから状態を確認
-        setTimeout(async () => {
-          try {
-            const OneSignal = window.OneSignal
-            if (!OneSignal) {
-              console.error('OneSignal is not available')
-              return
-            }
+        setIsInitialized(true)
 
-            const isOptedIn = await OneSignal.Notifications.permissionNative
-            if (isOptedIn) {
-              setIsSubscribed(true)
-            }
-            setIsInitialized(true)
-          } catch (error) {
-            console.error('Error checking OneSignal status:', error)
-            setIsInitialized(true)
+        // 既に通知が許可されているか確認
+        OneSignal.isPushNotificationsEnabled().then((enabled) => {
+          if (enabled) {
+            setIsSubscribed(true)
           }
-        }, 1000)
+        })
       } catch (error) {
         console.error('OneSignal initialization error:', error)
-        setIsInitialized(true)
+        setMessage('通知サービスの初期化に失敗しました。')
       }
     }
 
-    checkOneSignalStatus()
+    initializeOneSignal()
   }, [])
 
   const handleSubscribe = async () => {
+    if (!isInitialized) {
+      setMessage('通知サービスが初期化されていません。')
+      return
+    }
+
     setIsLoading(true)
     setMessage('')
 
     try {
-      // OneSignalが初期化されるまで待機
-      await new Promise<void>((resolve) => {
-        if (window.OneSignal) {
-          resolve()
-          return
-        }
-        window.OneSignalDeferred?.push(() => {
-          resolve()
-        })
-      })
-
-      const OneSignal = window.OneSignal
-      if (!OneSignal) {
-        setMessage('通知サービスが初期化されていません。')
-        setIsLoading(false)
-        return
-      }
-
       // 通知許可を求める
-      await OneSignal.Slidedown.promptPush()
-
-      // 少し待ってから許可状態とPlayer IDを確認
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      await OneSignal.showSlidedownPrompt()
 
       // 許可が得られたか確認
-      const permission = await OneSignal.Notifications.permissionNative
+      const isEnabled = await OneSignal.isPushNotificationsEnabled()
       
-      if (!permission) {
-        setMessage('通知が許可されませんでした。')
+      if (!isEnabled) {
+        alert('通知が許可されませんでした。')
         setIsLoading(false)
         return
       }
 
-      // Player IDを取得（複数の方法を試す）
-      let userId = null
-      
-      // 方法1: User.PushSubscription.id
-      try {
-        userId = await OneSignal.User.PushSubscription.id
-      } catch (e) {
-        console.log('Method 1 failed, trying alternative...')
-      }
+      // Player IDを取得
+      const playerId = await OneSignal.getPlayerId()
 
-      // 方法2: User.id (Player IDの別の取得方法)
-      if (!userId) {
-        try {
-          userId = await OneSignal.User.id
-        } catch (e) {
-          console.log('Method 2 failed, trying alternative...')
-        }
-      }
-
-      // 方法3: より長く待ってから再試行
-      if (!userId) {
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-        try {
-          userId = await OneSignal.User.PushSubscription.id
-        } catch (e) {
-          console.error('Failed to get Player ID:', e)
-        }
-      }
-
-      if (!userId) {
-        setMessage('Player IDの取得に失敗しました。少し待ってから再度お試しください。')
+      if (!playerId) {
+        alert('Player IDの取得に失敗しました。少し待ってから再度お試しください。')
         setIsLoading(false)
         return
       }
@@ -136,22 +76,22 @@ export default function Home() {
       const { error } = await supabase
         .from('profiles')
         .upsert(
-          { onesignal_id: userId },
+          { onesignal_id: playerId },
           { onConflict: 'onesignal_id' }
         )
 
       if (error) {
         console.error('Supabase error:', error)
-        setMessage('登録に失敗しました。もう一度お試しください。')
+        alert('登録に失敗しました。もう一度お試しください。')
         setIsLoading(false)
         return
       }
 
       setIsSubscribed(true)
-      setMessage('通知の登録が完了しました！')
+      alert('登録しました！')
     } catch (error) {
       console.error('Subscribe error:', error)
-      setMessage('通知の登録中にエラーが発生しました。')
+      alert('通知の登録中にエラーが発生しました。')
     } finally {
       setIsLoading(false)
     }
