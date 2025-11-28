@@ -56,7 +56,7 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">管理者ログイン</h1>
-          <p className="text-gray-400">コーチング通知管理システム</p>
+          <p className="text-gray-400">コーチング決して、通知管理システム</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
