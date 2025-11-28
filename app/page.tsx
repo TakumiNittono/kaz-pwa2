@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import InstallGuide from '@/components/InstallGuide'
-import { Bell, Zap, Shield, Sparkles, ArrowRight } from 'lucide-react'
+import { Bell, Zap, Shield, Sparkles, ArrowRight, Check } from 'lucide-react'
 
 declare global {
   interface Window {
@@ -250,6 +250,42 @@ export default function Home() {
             <br />
             AIコーチがあなたのポケットに入り込みます。
           </p>
+
+          {/* PWAモードの時のみ、通知ボタンを表示 */}
+          {isPwa && !isSubscribed && (
+            <div className="mt-12">
+              <button
+                onClick={handleSubscribe}
+                disabled={isLoading || !isInitialized}
+                className="group relative inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-[#00f0ff] to-[#0040ff] text-black font-bold text-xl rounded-xl hover:shadow-lg hover:shadow-[#00f0ff]/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <span>処理中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Bell className="w-6 h-6" />
+                    <span>通知を受け取る</span>
+                    <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* PWAモードで既に登録済みの場合 */}
+          {isPwa && isSubscribed && (
+            <div className="mt-12">
+              <div className="inline-block px-6 py-3 bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-lg">
+                <p className="text-[#00f0ff] font-semibold flex items-center gap-2">
+                  <Check className="w-5 h-5" />
+                  通知の設定が完了しています
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
