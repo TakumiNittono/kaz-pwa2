@@ -1,0 +1,82 @@
+===============================================
+xサーバーにアップロードすべきファイル一覧
+===============================================
+
+【重要】まずローカルで以下を実行してビルドしてください：
+  npm install
+  npm run build
+
+===============================================
+✅ アップロードすべきファイル・フォルダ
+===============================================
+
+📁 フォルダ（フォルダごとアップロード）
+├── .next/                    ★ 最重要！ビルド成果物
+├── public/                   ★ 静的ファイル（OneSignalSDKWorker.js含む）
+├── app/                      ★ アプリケーションコード
+│   ├── page.tsx
+│   ├── layout.tsx
+│   ├── globals.css
+│   ├── login/
+│   ├── admin/
+│   └── api/
+└── utils/                    ★ ユーティリティ関数
+    └── supabase/
+
+📄 ファイル（個別にアップロード）
+├── middleware.ts
+├── package.json
+├── package-lock.json
+├── next.config.js
+├── tsconfig.json
+├── tailwind.config.ts
+├── postcss.config.js
+└── .env.local                ★ 本番環境変数を設定したもの
+
+===============================================
+❌ アップロード不要なファイル
+===============================================
+
+✗ node_modules/              （xサーバー側でnpm install）
+✗ .git/                      （Git管理ファイル）
+✗ .DS_Store                  （macOSの隠しファイル）
+✗ *.log                      （ログファイル）
+✗ README.md                  （ドキュメント、任意）
+✗ DEPLOYMENT.md              （デプロイ手順、任意）
+✗ supabase_schema.sql        （SQL実行済みなら不要）
+✗ index.html                 （Next.jsでは不要）
+✗ manifest.json              （必要に応じて）
+
+===============================================
+📋 アップロード後の作業
+===============================================
+
+1. xサーバー側で以下を実行：
+   npm install --production
+
+2. .env.localファイルに本番環境変数を設定：
+   NEXT_PUBLIC_SUPABASE_URL=...
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+   SUPABASE_SERVICE_ROLE_KEY=...
+   NEXT_PUBLIC_ONESIGNAL_APP_ID=...
+   ONESIGNAL_REST_API_KEY=...
+
+3. サーバーを起動：
+   npm start
+
+4. xサーバーのポート設定（3000番が使えない場合）：
+   package.jsonのstartスクリプトを変更：
+   "start": "next start -p 8080"
+
+===============================================
+💡 簡単な確認方法
+===============================================
+
+ローカルで以下を実行して、アップロードすべきファイルを確認：
+  npm run build
+
+ビルドが成功すれば、.nextフォルダが作成されます。
+この.nextフォルダが最重要です！
+
+===============================================
+

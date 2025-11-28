@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知テスト</title>
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        // 初期化
+        await OneSignal.init({
+          appId: "7477e3e2-7f08-40cc-953a-6c418866f1ac",
+          allowLocalhostAsSecureOrigin: true, 
+        });
+      });
+
+      // ボタンが押された時に実行される関数
+      function triggerNotification() {
+        window.OneSignalDeferred.push(async function(OneSignal) {
+            // スライドダウンを表示して許可を求める
+            await OneSignal.Slidedown.promptPush();
+        });
+      }
+    </script>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .container { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; }
+        h1 { margin-top: 0; color: #333; }
+        p { color: #666; margin-bottom: 2rem; }
+        button { background-color: #007bff; color: white; border: none; padding: 15px 30px; font-size: 16px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: background 0.3s; width: 100%; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>通知の設定</h1>
+        <p>下のボタンを押すと、<br>通知の許可画面が表示されます。</p>
+        <button onclick="triggerNotification()">通知を受け取る</button>
+    </div>
+</body>
+</html>
