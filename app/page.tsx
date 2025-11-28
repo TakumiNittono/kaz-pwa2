@@ -218,7 +218,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
       {/* ヒーローセクション */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 py-20 md:py-32">
+      <section className="relative min-h-screen flex items-center justify-center px-4 py-0">
         {/* 背景グラデーション */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00f0ff]/10 rounded-full blur-3xl animate-pulse" />
