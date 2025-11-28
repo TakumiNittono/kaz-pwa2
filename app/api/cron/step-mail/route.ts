@@ -5,6 +5,7 @@ import { Client as OneSignalClient } from 'onesignal-node'
 // Vercel向け: サーバーサイドで実行（Node.jsランタイム）
 export const runtime = 'nodejs'
 export const maxDuration = 60 // Cron処理は長めに設定（秒）
+export const dynamic = 'force-dynamic' // 動的レンダリングを強制
 
 export async function GET(request: NextRequest) {
   try {
