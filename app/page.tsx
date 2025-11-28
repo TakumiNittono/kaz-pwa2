@@ -17,8 +17,49 @@ export default function Home() {
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [isPwa, setIsPwa] = useState(false)
+
+  // PWAモード判定
+  useEffect(() => {
+    const checkPwaMode = () => {
+      // display-mode: standalone をチェック
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      
+      // iOSのstandaloneモードをチェック
+      const isIOSStandalone = (navigator as any).standalone === true
+      
+      // PWAとして開かれているか判定
+      const pwaMode = isStandalone || isIOSStandalone
+      setIsPwa(pwaMode)
+    }
+
+    // 初回チェック
+    checkPwaMode()
+
+    // メディアクエリの変更を監視（必要に応じて）
+    const mediaQuery = window.matchMedia('(display-mode: standalone)')
+    const handleChange = () => checkPwaMode()
+    
+    // メディアクエリの変更をリッスン（サポートされている場合）
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange)
+    } else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handleChange)
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange)
+      } else if (mediaQuery.removeListener) {
+        mediaQuery.removeListener(handleChange)
+      }
+    }
+  }, [])
 
   useEffect(() => {
+    // PWAモードの時のみOneSignalの状態を確認
+    if (!isPwa) return
+
     const checkOneSignalStatus = async () => {
       try {
         // OneSignal SDKが読み込まれるまで待機（layout.tsxで初期化される）
@@ -58,7 +99,7 @@ export default function Home() {
     }
 
     checkOneSignalStatus()
-  }, [])
+  }, [isPwa])
 
   const handleSubscribe = async () => {
     setIsLoading(true)
@@ -212,13 +253,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* インストールガイドセクション */}
-      <section className="relative py-20 md:py-32 px-4 bg-gradient-to-b from-black via-gray-950 to-black">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,240,255,0.05),transparent_50%)]" />
-        <div className="relative z-10">
-          <InstallGuide />
-        </div>
-      </section>
+      {/* インストールガイドセクション（ブラウザで見ている時のみ表示） */}
+      {!isPwa && (
+        <section className="relative py-20 md:py-32 px-4 bg-gradient-to-b from-black via-gray-950 to-black">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,240,255,0.05),transparent_50%)]" />
+          <div className="relative z-10">
+            <div className="mb-8 text-center">
+              <div className="inline-block px-6 py-3 bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-lg mb-6">
+                <p className="text-[#00f0ff] font-semibold">
+                  アプリ版限定の機能です。まずはホームに追加してください
+                </p>
+              </div>
+            </div>
+            <InstallGuide />
+          </div>
+        </section>
+      )}
 
       {/* 機能紹介セクション */}
       <section className="relative py-20 md:py-32 px-4">
@@ -268,46 +318,68 @@ export default function Home() {
             </div>
           )}
 
-          {isSubscribed ? (
-            <div className="bg-gray-900 border border-[#00f0ff]/50 rounded-2xl p-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#00f0ff] to-[#0040ff] rounded-full flex items-center justify-center mx-auto mb-4">
-                <Bell className="w-8 h-8 text-black" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">
-                登録完了
-              </h3>
-              <p className="text-gray-400">
-                これから学習のサポート通知をお届けします。
+          {/* Case B: PWAとして開いている時 */}
+          {isPwa ? (
+            <>
+              {isSubscribed ? (
+                <div className="bg-gray-900 border border-[#00f0ff]/50 rounded-2xl p-8">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#00f0ff] to-[#0040ff] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bell className="w-8 h-8 text-black" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    登録完了
+                  </h3>
+                  <p className="text-gray-400">
+                    これから学習のサポート通知をお届けします。
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-8">
+                    <div className="inline-block px-6 py-3 bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-lg mb-6">
+                      <p className="text-[#00f0ff] font-semibold text-lg">
+                        アプリへようこそ！
+                      </p>
+                    </div>
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                    最後に通知を許可して
+                    <br />
+                    設定完了です
+                  </h2>
+                  <p className="text-gray-400 mb-8 text-lg">
+                    通知を許可すると、AIコーチがあなたの学習をサポートします
+                  </p>
+                  <button
+                    onClick={handleSubscribe}
+                    disabled={isLoading || !isInitialized}
+                    className="group relative inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-[#00f0ff] to-[#0040ff] text-black font-bold text-xl rounded-xl hover:shadow-lg hover:shadow-[#00f0ff]/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        <span>処理中...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Bell className="w-6 h-6" />
+                        <span>通知を受け取る</span>
+                        <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            /* Case A: ブラウザで見ている時 - 通知ボタンは非表示 */
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8">
+              <p className="text-gray-400 text-lg">
+                通知機能はアプリ版限定です。
+                <br />
+                上記の手順に従って、ホーム画面に追加してください。
               </p>
             </div>
-          ) : (
-            <>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                準備ができたら、
-                <br />
-                通知を受け取ってスタート
-              </h2>
-              <p className="text-gray-400 mb-8 text-lg">
-                登録は無料で、いつでも停止できます
-              </p>
-              <button
-                onClick={handleSubscribe}
-                disabled={isLoading || !isInitialized}
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00f0ff] to-[#0040ff] text-black font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-[#00f0ff]/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                    <span>処理中...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>通知を受け取る</span>
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </button>
-            </>
           )}
         </div>
       </section>
