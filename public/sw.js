@@ -17,14 +17,25 @@ self.addEventListener('install', (event) => {
 
 // フェッチ時の処理（ネットワーク優先、フォールバックでキャッシュ）
 self.addEventListener('fetch', (event) => {
+  // GETリクエストのみキャッシュ（POST/PUT/DELETEなどはキャッシュしない）
+  if (event.request.method !== 'GET') {
+    return // POSTなどのリクエストはそのまま通過
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // レスポンスをクローンしてキャッシュに保存
-        const responseToCache = response.clone()
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache)
-        })
+        // 成功したレスポンスのみキャッシュ（エラーレスポンスはキャッシュしない）
+        if (response && response.status === 200) {
+          // レスポンスをクローンしてキャッシュに保存
+          const responseToCache = response.clone()
+          caches.open(CACHE_NAME).then((cache) => {
+            // 同じリクエストが既にキャッシュされている場合はスキップ
+            cache.put(event.request, responseToCache).catch(() => {
+              // キャッシュエラーは無視（POSTリクエストなど）
+            })
+          })
+        }
         return response
       })
       .catch(() => {
