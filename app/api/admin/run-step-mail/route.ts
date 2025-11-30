@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // ステップ配信APIを呼び出し
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://kaz-pwa2.vercel.app')
 
     const response = await fetch(`${baseUrl}/api/cron/step-mail`, {
       method: 'GET',

@@ -36,6 +36,9 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 # OneSignal設定
 NEXT_PUBLIC_ONESIGNAL_APP_ID=your_app_id_here
 ONESIGNAL_REST_API_KEY=your_rest_api_key_here
+
+# アプリURL設定（本番環境）
+NEXT_PUBLIC_APP_URL=https://kaz-pwa2.vercel.app
 ```
 
 ### ステップ3: 値を取得
@@ -77,6 +80,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 NEXT_PUBLIC_ONESIGNAL_APP_ID
 ONESIGNAL_REST_API_KEY
+NEXT_PUBLIC_APP_URL=https://kaz-pwa2.vercel.app
 ```
 
 4. 各環境（Production, Preview, Development）に設定
