@@ -35,8 +35,19 @@ export async function POST(request: NextRequest) {
 
     if (!appId || !restApiKey) {
       console.error('OneSignal credentials are not configured')
+      console.error('App ID:', appId ? 'Set' : 'Missing')
+      console.error('REST API Key:', restApiKey ? 'Set' : 'Missing')
       return NextResponse.json(
-        { error: 'OneSignalの設定が完了していません' },
+        { error: 'OneSignalの設定が完了していません。環境変数を確認してください。' },
+        { status: 500 }
+      )
+    }
+
+    // REST API Keyの形式を確認（通常は長い文字列）
+    if (restApiKey.length < 20) {
+      console.error('REST API Key appears to be invalid (too short)')
+      return NextResponse.json(
+        { error: 'OneSignal REST API Keyが無効です。正しいキーを設定してください。' },
         { status: 500 }
       )
     }
@@ -56,7 +67,26 @@ export async function POST(request: NextRequest) {
       included_segments: ['All'], // すべてのユーザーに送信
     }
 
-    const response = await client.createNotification(notification)
+    let response
+    try {
+      response = await client.createNotification(notification)
+    } catch (onesignalError: any) {
+      console.error('OneSignal API error:', onesignalError)
+      console.error('Error details:', JSON.stringify(onesignalError, null, 2))
+      
+      // OneSignal APIエラーの詳細を返す
+      const errorMessage = onesignalError?.body?.errors?.[0] || 
+                          onesignalError?.message || 
+                          'OneSignal APIへのリクエストに失敗しました'
+      
+      return NextResponse.json(
+        { 
+          error: errorMessage,
+          details: 'OneSignal REST API Keyが正しく設定されているか確認してください。Vercelの環境変数を確認してください。'
+        },
+        { status: 500 }
+      )
+    }
 
     // Supabaseに通知履歴を保存
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -73,19 +103,61 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { error: dbError } = await supabase.from('notifications').insert({
+    // 管理者用の通知履歴テーブルに保存（既存の機能を維持）
+    const { error: adminDbError } = await supabase.from('notifications').insert({
       title: sanitizedTitle,
       message: sanitizedMessage,
       sent_at: new Date().toISOString(),
     })
 
-    if (dbError) {
-      console.error('Failed to save notification history:', dbError)
+    if (adminDbError) {
+      console.error('Failed to save admin notification history:', adminDbError)
+    }
+
+    // 全ユーザーのuser_notificationsテーブルに保存（ユーザー個別の通知履歴）
+    try {
+      // 全ユーザーのonesignal_idを取得
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('onesignal_id')
+
+      if (profilesError) {
+        console.error('Failed to fetch profiles:', profilesError)
+      } else if (profiles && profiles.length > 0) {
+        // 各ユーザーに通知履歴を保存
+        const notificationRecords = profiles.map((profile) => ({
+          onesignal_id: profile.onesignal_id,
+          title: sanitizedTitle,
+          message: sanitizedMessage,
+          url: null, // 管理者送信の通知にはURLは設定しない
+          step_hours: null, // ステップ配信ではない
+          sent_at: new Date().toISOString(),
+        }))
+
+        // バッチで一括挿入（パフォーマンス向上のため）
+        const { error: userDbError } = await supabase
+          .from('user_notifications')
+          .insert(notificationRecords)
+
+        if (userDbError) {
+          console.error('Failed to save user notification history:', userDbError)
+          // 通知は送信されているので、履歴保存のエラーは警告として扱う
+          return NextResponse.json({
+            success: true,
+            message: '通知は送信されましたが、履歴の保存に失敗しました',
+            warning: userDbError.message,
+          })
+        }
+
+        console.log(`Notification saved to ${profiles.length} users' notification history`)
+      }
+    } catch (userHistoryError) {
+      console.error('Failed to save user notification history:', userHistoryError)
       // 通知は送信されているので、履歴保存のエラーは警告として扱う
       return NextResponse.json({
         success: true,
         message: '通知は送信されましたが、履歴の保存に失敗しました',
-        warning: dbError.message,
+        warning: userHistoryError instanceof Error ? userHistoryError.message : 'Unknown error',
       })
     }
 

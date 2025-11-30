@@ -9,7 +9,7 @@
 ### ステップ1: OneSignalダッシュボードにログイン
 
 1. [OneSignal Dashboard](https://dashboard.onesignal.com) にログイン
-2. アプリを選択（App ID: `9523ceac-5c3b-4694-99d9-4708a151eb03`）
+2. アプリを選択（App ID: `7477e3e2-7f08-40cc-953a-6c418866f1ac`）
 
 ### ステップ2: Web Push設定を更新
 
@@ -36,7 +36,7 @@ Vercelダッシュボードで以下の環境変数を設定してください�
 
 ```env
 NEXT_PUBLIC_APP_URL=https://kaz-pwa2.vercel.app
-NEXT_PUBLIC_ONESIGNAL_APP_ID=9523ceac-5c3b-4694-99d9-4708a151eb03
+NEXT_PUBLIC_ONESIGNAL_APP_ID=7477e3e2-7f08-40cc-953a-6c418866f1ac
 ONESIGNAL_REST_API_KEY=your_rest_api_key_here
 ```
 
