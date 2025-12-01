@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/utils/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -7,6 +8,14 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
+    // 認証チェック
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '20')
 
@@ -20,10 +29,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Service Role Keyを使用（RLSをバイパス）
+    const supabaseAdmin = createServiceClient(supabaseUrl, supabaseServiceKey)
 
     // 最近の登録者を取得
-    const { data: users, error } = await supabase
+    const { data: users, error } = await supabaseAdmin
       .from('profiles')
       .select('onesignal_id, created_at')
       .order('created_at', { ascending: false })
