@@ -390,12 +390,38 @@ export default function AdminDashboard() {
           </button>
 
           {migrateResult && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h3 className="font-semibold text-green-800 mb-2">移行結果</h3>
-              <div className="text-sm text-green-700 space-y-1">
+            <div className={`mt-4 p-4 border rounded-lg ${
+              migrateResult.insertedCount > 0 
+                ? 'bg-green-50 border-green-200' 
+                : 'bg-yellow-50 border-yellow-200'
+            }`}>
+              <h3 className={`font-semibold mb-2 ${
+                migrateResult.insertedCount > 0 
+                  ? 'text-green-800' 
+                  : 'text-yellow-800'
+              }`}>
+                移行結果
+              </h3>
+              {migrateResult.message && (
+                <p className={`text-sm mb-2 ${
+                  migrateResult.insertedCount > 0 
+                    ? 'text-green-700' 
+                    : 'text-yellow-700'
+                }`}>
+                  {migrateResult.message}
+                </p>
+              )}
+              <div className={`text-sm space-y-1 ${
+                migrateResult.insertedCount > 0 
+                  ? 'text-green-700' 
+                  : 'text-yellow-700'
+              }`}>
                 <p>通知数: {migrateResult.notificationsCount || 0}件</p>
                 <p>ユーザー数: {migrateResult.usersCount || 0}人</p>
                 <p>追加された通知履歴: {migrateResult.insertedCount || 0}件</p>
+                {migrateResult.totalRecords !== undefined && migrateResult.totalRecords > 0 && (
+                  <p>重複を除いた件数: {migrateResult.totalRecords}件</p>
+                )}
               </div>
             </div>
           )}

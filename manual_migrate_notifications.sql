@@ -1,5 +1,5 @@
--- 既存のnotificationsテーブルのデータをuser_notificationsテーブルに移行
--- 注意: このスクリプトは過去に送信された通知を全ユーザーの通知履歴に追加します
+-- 手動でnotificationsテーブルのデータをuser_notificationsテーブルに移行するSQL
+-- 注意: このSQLを実行すると、notificationsテーブルの全通知を全ユーザーのuser_notificationsに追加します
 
 -- 既存のnotificationsテーブルから全通知を取得し、
 -- 現在登録されている全ユーザーのuser_notificationsテーブルに追加
@@ -29,11 +29,12 @@ WHERE
 ORDER BY 
     n.sent_at, p.onesignal_id;
 
--- 移行が完了したことを確認するクエリ
--- SELECT 
---     COUNT(*) as total_notifications_in_notifications_table,
---     (SELECT COUNT(DISTINCT onesignal_id) FROM user_notifications WHERE step_hours IS NULL) as total_user_notifications,
---     (SELECT COUNT(DISTINCT onesignal_id) FROM profiles) as total_users
--- FROM notifications;
+-- 移行結果を確認
+SELECT 
+    COUNT(*) as total_migrated_records,
+    COUNT(DISTINCT onesignal_id) as users_with_notifications,
+    COUNT(DISTINCT title) as unique_notification_titles
+FROM user_notifications
+WHERE step_hours IS NULL;  -- ステップ配信ではない通知（管理者が送信した通知）
 
 

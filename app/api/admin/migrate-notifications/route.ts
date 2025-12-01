@@ -43,8 +43,11 @@ export async function POST(request: NextRequest) {
     if (!notifications || notifications.length === 0) {
       return NextResponse.json({
         success: true,
-        message: '移行する通知がありません',
-        migrated: 0,
+        message: '移行する通知がありません。notificationsテーブルにデータが存在しません。',
+        notificationsCount: 0,
+        usersCount: 0,
+        totalRecords: 0,
+        insertedCount: 0,
       })
     }
 
@@ -60,8 +63,11 @@ export async function POST(request: NextRequest) {
     if (!profiles || profiles.length === 0) {
       return NextResponse.json({
         success: true,
-        message: '移行するユーザーがありません',
-        migrated: 0,
+        message: '移行するユーザーがありません。profilesテーブルに登録されているユーザーがいません。',
+        notificationsCount: notifications.length,
+        usersCount: 0,
+        totalRecords: 0,
+        insertedCount: 0,
       })
     }
 
@@ -123,10 +129,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // メッセージを生成
+    let message = '通知の移行が完了しました'
+    if (insertedCount === 0 && notificationRecords.length === 0) {
+      message = '全ての通知は既に移行済みです（重複のため新規追加なし）'
+    } else if (insertedCount === 0 && notificationRecords.length > 0) {
+      message = `移行処理を実行しましたが、データの挿入に失敗しました。詳細はサーバーログを確認してください。`
+    } else if (insertedCount < notificationRecords.length) {
+      message = `一部の通知履歴の追加に失敗しました。${insertedCount}件/${notificationRecords.length}件が追加されました。`
+    }
+
     return NextResponse.json(
       {
         success: true,
-        message: `通知の移行が完了しました`,
+        message: message,
         notificationsCount: notifications.length,
         usersCount: profiles.length,
         totalRecords: notificationRecords.length,
