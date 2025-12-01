@@ -31,6 +31,8 @@ export default function AdminDashboard() {
   const [isLoadingStats, setIsLoadingStats] = useState(true)
   const [isRunningStepMail, setIsRunningStepMail] = useState(false)
   const [stepMailResult, setStepMailResult] = useState<any>(null)
+  const [isMigrating, setIsMigrating] = useState(false)
+  const [migrateResult, setMigrateResult] = useState<any>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -141,6 +143,41 @@ export default function AdminDashboard() {
       })
     } finally {
       setIsRunningStepMail(false)
+    }
+  }
+
+  const handleMigrateNotifications = async () => {
+    if (!confirm('過去の通知履歴を全ユーザーの通知履歴に移行しますか？\nこの処理には時間がかかる場合があります。')) {
+      return
+    }
+
+    setIsMigrating(true)
+    setMigrateResult(null)
+
+    try {
+      const response = await fetch('/api/admin/migrate-notifications', {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '通知の移行に失敗しました')
+      }
+
+      setMigrateResult(data)
+      setStatus({
+        type: 'success',
+        message: `通知の移行が完了しました！${data.insertedCount || 0}件の通知履歴を追加しました。`,
+      })
+    } catch (error) {
+      console.error('Migrate notifications error:', error)
+      setStatus({
+        type: 'error',
+        message: error instanceof Error ? error.message : '通知の移行にエラーが発生しました。',
+      })
+    } finally {
+      setIsMigrating(false)
     }
   }
 
@@ -317,6 +354,48 @@ export default function AdminDashboard() {
                       </div>
                     ))}
                 </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 通知履歴の移行 */}
+        <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">通知履歴の移行</h2>
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800 font-semibold mb-1">
+              ⚠️ 過去の通知履歴を移行
+            </p>
+            <p className="text-xs text-yellow-700">
+              `notifications`テーブルに保存されている過去の通知を、全ユーザーの`user_notifications`テーブルに移行します。
+              これにより、アプリの通知履歴ページに過去の通知が表示されるようになります。
+            </p>
+          </div>
+          <button
+            onClick={handleMigrateNotifications}
+            disabled={isMigrating}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+          >
+            {isMigrating ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                移行中...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-5 h-5" />
+                過去の通知履歴を移行
+              </>
+            )}
+          </button>
+
+          {migrateResult && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h3 className="font-semibold text-green-800 mb-2">移行結果</h3>
+              <div className="text-sm text-green-700 space-y-1">
+                <p>通知数: {migrateResult.notificationsCount || 0}件</p>
+                <p>ユーザー数: {migrateResult.usersCount || 0}人</p>
+                <p>追加された通知履歴: {migrateResult.insertedCount || 0}件</p>
               </div>
             </div>
           )}
