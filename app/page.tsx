@@ -259,7 +259,9 @@ export default function Home() {
         {isPwa && isSubscribed && (
           <div className="absolute top-4 right-4">
             <button
-              onClick={() => window.location.href = 'https://utage-system.com/p/wuSiFKxuyU5T'}
+              onClick={() => {
+                window.location.href = 'https://utage-system.com/p/wuSiFKxuyU5T'
+              }}
               className="relative inline-flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg hover:border-[#00f0ff]/50 transition-all"
             >
               <Bell className="w-5 h-5 text-[#00f0ff]" />
