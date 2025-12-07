@@ -88,10 +88,10 @@ export default function Home() {
               // Already subscribed - just update state but don't show message
               setIsSubscribed(true)
               setIsInitialized(true)
-              // Show completion message after 15 seconds
+              // Show completion message after 10 seconds
               setTimeout(() => {
                 setShowCompletionMessage(true)
-              }, 15000)
+              }, 10000)
               return
             }
             setIsInitialized(true)
@@ -153,10 +153,10 @@ export default function Home() {
                 // AND we've waited at least 15 seconds
                 if (permissionGranted) {
                   setIsSubscribed(true)
-                  // Show completion message after 15 seconds
+                  // Show completion message after 10 seconds
                   setTimeout(() => {
                     setShowCompletionMessage(true)
-                  }, 15000)
+                  }, 10000)
                   // Don't redirect - keep showing loading screen
                   // User can stay on this page waiting for notifications
                 }
@@ -199,8 +199,8 @@ export default function Home() {
         )}
 
         {/* Main content */}
-        <Bell className="w-16 h-16 text-[#00f0ff] mx-auto mb-6" />
-        <h1 className="text-2xl font-bold mb-4">Receive Notifications</h1>
+        <Bell className="w-24 h-24 text-[#00f0ff] mx-auto mb-6" />
+        <h1 className="text-2xl font-bold mb-4">free session</h1>
         <p className="text-gray-400 mb-8 text-sm">
           Add to home screen and use as an app
         </p>
