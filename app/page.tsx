@@ -127,10 +127,20 @@ export default function Home() {
                 // Show the Push Primer (notification permission prompt)
                 await window.OneSignal.Slidedown.promptPush()
                 
+                // Wait a bit for Push Primer to fully appear
+                await new Promise((resolve) => setTimeout(resolve, 500))
+                
                 // Wait for user to interact with the Push Primer
-                // Poll for permission change instead of immediately checking
+                // Poll for permission change - keep checking until permission is granted or timeout
                 let permissionGranted = false
-                for (let i = 0; i < 30; i++) {
+                
+                // First, wait 15 seconds to ensure Push Primer is visible and user has time to interact
+                for (let i = 0; i < 15; i++) {
+                  await new Promise((resolve) => setTimeout(resolve, 1000))
+                }
+                
+                // Now start checking for permission (after Push Primer has been visible)
+                for (let i = 0; i < 60; i++) {
                   await new Promise((resolve) => setTimeout(resolve, 1000))
                   
                   try {
@@ -144,7 +154,7 @@ export default function Home() {
                   }
                 }
                 
-                // Only proceed if permission was granted
+                // Only proceed if permission was granted (user clicked allow)
                 if (permissionGranted) {
                   setIsSubscribed(true)
                   
