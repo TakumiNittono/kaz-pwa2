@@ -341,6 +341,11 @@ export default function Home() {
                 alt="Add to Home Screen option"
                 className="w-full h-auto rounded-lg"
               />
+              <img
+                src="/IMG_8350.jpg"
+                alt="Home screen confirmation"
+                className="w-full h-auto rounded-lg"
+              />
             </div>
           </div>
         )}
