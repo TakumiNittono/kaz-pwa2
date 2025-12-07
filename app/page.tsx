@@ -121,16 +121,31 @@ export default function Home() {
             setIsInitialized(true)
             
             // Automatically prompt for notification permission if not subscribed
+            // Wait for Push Primer to appear and user to interact
             if (!permission) {
               try {
+                // Show the Push Primer (notification permission prompt)
                 await window.OneSignal.Slidedown.promptPush()
                 
-                // Wait a bit before checking permission status
-                await new Promise((resolve) => setTimeout(resolve, 2000))
+                // Wait for user to interact with the Push Primer
+                // Poll for permission change instead of immediately checking
+                let permissionGranted = false
+                for (let i = 0; i < 30; i++) {
+                  await new Promise((resolve) => setTimeout(resolve, 1000))
+                  
+                  try {
+                    const currentPermission = await window.OneSignal.Notifications.permissionNative
+                    if (currentPermission) {
+                      permissionGranted = true
+                      break
+                    }
+                  } catch (error) {
+                    // Continue polling
+                  }
+                }
                 
-                // Check if permission was granted
-                const newPermission = await window.OneSignal.Notifications.permissionNative
-                if (newPermission) {
+                // Only proceed if permission was granted
+                if (permissionGranted) {
                   setIsSubscribed(true)
                   
                   // Get Player ID and save to Supabase
@@ -156,7 +171,7 @@ export default function Home() {
                         { onConflict: 'onesignal_id' }
                       )
                     
-                    // Redirect after successful registration
+                    // Redirect after successful registration (page refresh)
                     const redirectUrl = 'https://utage-system.com/p/zwvVkDBzc2wb'
                     if (redirectUrl.startsWith('https://')) {
                       await new Promise((resolve) => setTimeout(resolve, 1000))
