@@ -27,7 +27,7 @@ cp .env.local.example .env.local
 ### 2. Supabaseデータベースのセットアップ
 
 1. Supabaseプロジェクトを作成
-2. `supabase_schema.sql`の内容をSQLエディタで実行
+2. 必要なテーブル（`profiles`, `notifications`）を作成
 3. 管理者アカウントを作成（Auth → Users）
 
 ### 3. OneSignalの設定

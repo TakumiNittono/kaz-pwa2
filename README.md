@@ -34,10 +34,11 @@ ONESIGNAL_REST_API_KEY=your_onesignal_rest_api_key
 ### 3. Supabaseデータベースのセットアップ
 
 1. SupabaseのSQLエディタにアクセス
-2. `supabase_schema.sql` の内容をコピーして実行
-3. これにより、以下のテーブルが作成されます：
+2. 以下のテーブルを作成してください：
    - `profiles`: 一般ユーザーのOneSignal Player IDを保存
    - `notifications`: 管理者が送信した通知の履歴を保存
+   
+   テーブル構造はSupabaseダッシュボードで直接作成するか、既存のスキーマを参照してください。
 
 ### 4. OneSignalの設定
 
@@ -103,7 +104,6 @@ kaz-pwa2/
 ├── public/
 │   └── OneSignalSDKWorker.js # OneSignal Service Worker
 ├── middleware.ts             # 認証保護ミドルウェア
-├── supabase_schema.sql       # データベーススキーマ
 └── package.json
 ```
 

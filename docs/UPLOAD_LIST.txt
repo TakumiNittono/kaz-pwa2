@@ -43,7 +43,6 @@ xサーバーにアップロードすべきファイル一覧
 ✗ *.log                      （ログファイル）
 ✗ README.md                  （ドキュメント、任意）
 ✗ DEPLOYMENT.md              （デプロイ手順、任意）
-✗ supabase_schema.sql        （SQL実行済みなら不要）
 ✗ index.html                 （Next.jsでは不要）
 ✗ manifest.json              （必要に応じて）
 
