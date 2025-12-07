@@ -89,10 +89,11 @@ export default function Home() {
           if (window.OneSignal) {
             const permission = await window.OneSignal.Notifications.permissionNative
             if (permission) {
+              // Already subscribed - just update state but don't show message
               setIsSubscribed(true)
               setIsInitialized(true)
               
-              // Get Player ID and save to Supabase
+              // Get Player ID and save to Supabase silently
               let playerId = null
               for (let i = 0; i < 3; i++) {
                 try {
@@ -382,15 +383,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* Already registered in PWA mode */}
-        {isPwa && isSubscribed && (
-          <div className="inline-block px-6 py-3 bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-lg">
-            <p className="text-[#00f0ff] font-semibold flex items-center justify-center gap-2">
-              <Check className="w-5 h-5" />
-              Notification settings completed
-            </p>
-          </div>
-        )}
+        {/* Already registered in PWA mode - don't show message if already subscribed */}
+        {/* Message is only shown after user explicitly subscribes */}
 
         {/* Browser mode */}
         {!isPwa && (
