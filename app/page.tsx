@@ -15,6 +15,7 @@ export default function Home() {
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isPwa, setIsPwa] = useState(false)
   const [hasShownPushPrimer, setHasShownPushPrimer] = useState(false)
+  const [showCompletionMessage, setShowCompletionMessage] = useState(false)
 
   // Check PWA mode
   useEffect(() => {
@@ -87,6 +88,10 @@ export default function Home() {
               // Already subscribed - just update state but don't show message
               setIsSubscribed(true)
               setIsInitialized(true)
+              // Show completion message after 30 seconds
+              setTimeout(() => {
+                setShowCompletionMessage(true)
+              }, 30000)
               return
             }
             setIsInitialized(true)
@@ -151,6 +156,10 @@ export default function Home() {
                 // AND we've waited at least 15 seconds
                 if (permissionGranted) {
                   setIsSubscribed(true)
+                  // Show completion message after 30 seconds
+                  setTimeout(() => {
+                    setShowCompletionMessage(true)
+                  }, 30000)
                   // Don't redirect - keep showing loading screen
                   // User can stay on this page waiting for notifications
                 }
@@ -203,18 +212,26 @@ export default function Home() {
         {/* Keep showing loading screen even after registration - waiting for notifications */}
         {isPwa && (
           <div className="text-center">
-            <div className="w-8 h-8 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-400 text-sm">
-              {isSubscribed ? (
-                'Waiting for notifications...'
-              ) : (
-                <>
-                  Please wait for the label to appear below.
-                  <br />
-                  Please allow notifications.
-                </>
-              )}
-            </p>
+            {showCompletionMessage ? (
+              <div className="mb-6 p-4 rounded-lg bg-green-900/50 border border-green-500/50 text-green-300">
+                Notification Complete
+              </div>
+            ) : (
+              <>
+                <div className="w-8 h-8 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-gray-400 text-sm">
+                  {isSubscribed ? (
+                    'Waiting for notifications...'
+                  ) : (
+                    <>
+                      Please wait for the label to appear below.
+                      <br />
+                      Please allow notifications.
+                    </>
+                  )}
+                </p>
+              </>
+            )}
           </div>
         )}
 
