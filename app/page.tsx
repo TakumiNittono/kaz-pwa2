@@ -325,11 +325,23 @@ export default function Home() {
         {/* ブラウザモードの場合 */}
         {!isPwa && (
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm mb-4">
               Notification features are limited to the app version.
               <br />
               Please "Add to Home Screen" from the browser menu.
             </p>
+            <div className="w-full max-w-sm mx-auto space-y-6">
+              <img
+                src="/IMG_8348.jpg"
+                alt="How to add to home screen"
+                className="w-full h-auto rounded-lg"
+              />
+              <img
+                src="/IMG_8347.jpg"
+                alt="Add to Home Screen option"
+                className="w-full h-auto rounded-lg"
+              />
+            </div>
           </div>
         )}
       </div>
