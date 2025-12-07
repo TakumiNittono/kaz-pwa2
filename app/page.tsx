@@ -21,28 +21,28 @@ export default function Home() {
   const [isPwa, setIsPwa] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
 
-  // PWAモード判定
+  // Check PWA mode
   useEffect(() => {
     const checkPwaMode = () => {
-      // display-mode: standalone をチェック
+      // Check display-mode: standalone
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       
-      // iOSのstandaloneモードをチェック
+      // Check iOS standalone mode
       const isIOSStandalone = (navigator as any).standalone === true
       
-      // PWAとして開かれているか判定
+      // Determine if opened as PWA
       const pwaMode = isStandalone || isIOSStandalone
       setIsPwa(pwaMode)
     }
 
-    // 初回チェック
+    // Initial check
     checkPwaMode()
 
-    // メディアクエリの変更を監視（必要に応じて）
+    // Monitor media query changes
     const mediaQuery = window.matchMedia('(display-mode: standalone)')
     const handleChange = () => checkPwaMode()
     
-    // メディアクエリの変更をリッスン（サポートされている場合）
+    // Listen to media query changes (if supported)
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange)
     } else if (mediaQuery.addListener) {
@@ -58,7 +58,7 @@ export default function Home() {
     }
   }, [])
 
-  // OneSignal SDKの待機処理を共通化
+  // Wait for OneSignal SDK to load
   const waitForOneSignal = async (): Promise<void> => {
     await new Promise<void>((resolve) => {
       if (window.OneSignal) {
@@ -73,18 +73,18 @@ export default function Home() {
   }
 
   useEffect(() => {
-    // PWAモードの時のみOneSignalの状態を確認
+    // Check OneSignal status only in PWA mode
     if (!isPwa) return
 
     const checkOneSignalStatus = async () => {
       try {
-        // OneSignal SDKが読み込まれるまで待機（layout.tsxで初期化される）
+        // Wait for OneSignal SDK to load (initialized in layout.tsx)
         await waitForOneSignal()
 
-        // 少し待ってから状態を確認（初期化完了を待つ）
+        // Wait a bit before checking status (wait for initialization to complete)
         await new Promise((resolve) => setTimeout(resolve, 2000))
 
-        // 既に通知が許可されているか確認
+        // Check if notifications are already permitted
         try {
           if (window.OneSignal) {
             const permission = await window.OneSignal.Notifications.permissionNative
@@ -94,13 +94,13 @@ export default function Home() {
             setIsInitialized(true)
           }
         } catch (error) {
-          // エラーは無視（ドメイン設定待ちのため）
-          // ただし、初期化済みとして扱う（ボタンは有効化）
+          // Ignore errors (waiting for domain configuration)
+          // Treat as initialized (enable button)
           setIsInitialized(true)
         }
       } catch (error) {
-        // エラーは無視（ドメイン設定待ちのため）
-        // ただし、初期化済みとして扱う（ボタンは有効化）
+        // Ignore errors (waiting for domain configuration)
+        // Treat as initialized (enable button)
         setIsInitialized(true)
       }
     }
@@ -108,7 +108,7 @@ export default function Home() {
     checkOneSignalStatus()
   }, [isPwa])
 
-  // 未読通知数を取得
+  // Fetch unread notification count
   useEffect(() => {
     if (!isPwa || !isSubscribed) return
 
@@ -143,7 +143,7 @@ export default function Home() {
     }
 
     fetchUnreadCount()
-    // 30秒ごとに更新
+    // Update every 30 seconds
     const interval = setInterval(fetchUnreadCount, 30000)
     return () => clearInterval(interval)
   }, [isPwa, isSubscribed])
@@ -153,7 +153,7 @@ export default function Home() {
     setMessage('')
 
     try {
-      // OneSignalが利用可能か確認
+      // Check if OneSignal is available
       await waitForOneSignal()
       
       if (!window.OneSignal) {
@@ -162,11 +162,11 @@ export default function Home() {
         return
       }
 
-      // 通知許可を求める
+      // Request notification permission
       try {
         await window.OneSignal.Slidedown.promptPush()
       } catch (error: any) {
-        // ドメイン設定エラーの場合は、ユーザーに分かりやすいメッセージを表示
+        // Show user-friendly message for domain configuration errors
         if (error?.message?.includes('Can only be used on')) {
           setMessage('Notification feature is currently being prepared. Please wait a moment.')
           setIsLoading(false)
@@ -175,15 +175,15 @@ export default function Home() {
         throw error
       }
 
-      // 少し待ってから許可状態を確認
+      // Wait a bit before checking permission status
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // 許可が得られたか確認
+      // Check if permission was granted
       let permission = false
       try {
         permission = await window.OneSignal.Notifications.permissionNative
       } catch (error) {
-        // エラーは無視
+        // Ignore errors
       }
       
       if (!permission) {
@@ -192,14 +192,14 @@ export default function Home() {
         return
       }
 
-      // Player IDを取得（複数回試行）
+      // Get Player ID (retry multiple times)
       let playerId = null
       for (let i = 0; i < 3; i++) {
         try {
           playerId = await window.OneSignal.User.PushSubscription.id
           if (playerId) break
         } catch (error) {
-          // エラーは無視して再試行
+          // Ignore errors and retry
         }
         if (i < 2) {
           await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -212,7 +212,7 @@ export default function Home() {
         return
       }
 
-      // Supabaseに保存
+      // Save to Supabase
       const supabase = createClient()
       const { error } = await supabase
         .from('profiles')
@@ -231,16 +231,16 @@ export default function Home() {
       setIsSubscribed(true)
       setMessage('Registered successfully!')
       
-      // 通知許可後、指定のURLに遷移（アラート表示後に遷移）
-      // セキュリティチェック: 許可されたドメインのみ遷移
+      // Redirect to specified URL after notification permission (after showing alert)
+      // Security check: only redirect to allowed domains
       const redirectUrl = 'https://utage-system.com/p/zwvVkDBzc2wb'
       if (redirectUrl.startsWith('https://')) {
-        // 成功メッセージを表示してから遷移（1秒待機）
+        // Show success message before redirecting (wait 1 second)
         await new Promise((resolve) => setTimeout(resolve, 1000))
         window.location.href = redirectUrl
       }
     } catch (error: any) {
-      // ドメイン設定エラーの場合は、ユーザーに分かりやすいメッセージを表示
+      // Show user-friendly message for domain configuration errors
       if (error?.message?.includes('Can only be used on')) {
         setMessage('Notification feature is currently being prepared. Please wait a moment.')
       } else {
@@ -255,7 +255,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
-        {/* 通知履歴へのリンク（PWAモードで登録済みの場合） */}
+        {/* Notification history link (when registered in PWA mode) */}
         {isPwa && isSubscribed && (
           <div className="absolute top-4 right-4">
             <button
@@ -274,14 +274,14 @@ export default function Home() {
           </div>
         )}
 
-        {/* メインコンテンツ */}
+        {/* Main content */}
         <Bell className="w-16 h-16 text-[#00f0ff] mx-auto mb-6" />
         <h1 className="text-2xl font-bold mb-4">Receive Notifications</h1>
         <p className="text-gray-400 mb-8 text-sm">
           Add to home screen and use as an app
         </p>
 
-        {/* メッセージ表示 */}
+        {/* Message display */}
         {message && (
           <div
             className={`mb-6 p-4 rounded-lg ${
@@ -294,25 +294,32 @@ export default function Home() {
           </div>
         )}
 
-        {/* PWAモードの時のみ、通知ボタンを表示 */}
+        {/* Show notification button only in PWA mode */}
         {isPwa && !isSubscribed && (
-          <button
-            onClick={handleSubscribe}
-            disabled={isLoading || !isInitialized}
-            className="w-full px-6 py-3 bg-[#00f0ff] text-black font-bold rounded-lg hover:bg-[#00d9e6] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                Processing...
-              </span>
-            ) : (
-              'Receive Notifications'
-            )}
-          </button>
+          <>
+            <button
+              onClick={handleSubscribe}
+              disabled={isLoading || !isInitialized}
+              className="w-full px-6 py-3 bg-[#00f0ff] text-black font-bold rounded-lg hover:bg-[#00d9e6] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  Processing...
+                </span>
+              ) : (
+                'Receive Notifications'
+              )}
+            </button>
+            <p className="text-gray-400 text-sm mt-4 text-center">
+              Please wait for the label to appear below.
+              <br />
+              Please allow notifications.
+            </p>
+          </>
         )}
 
-        {/* PWAモードで既に登録済みの場合 */}
+        {/* Already registered in PWA mode */}
         {isPwa && isSubscribed && (
           <div className="inline-block px-6 py-3 bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-lg">
             <p className="text-[#00f0ff] font-semibold flex items-center justify-center gap-2">
@@ -322,7 +329,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ブラウザモードの場合 */}
+        {/* Browser mode */}
         {!isPwa && (
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
             <p className="text-gray-400 text-sm mb-4">
@@ -347,6 +354,9 @@ export default function Home() {
                 className="w-full h-auto rounded-lg"
               />
             </div>
+            <p className="text-gray-400 text-sm mt-6 text-center">
+              After adding to iPhone home screen, please wait for the label to appear below.
+            </p>
           </div>
         )}
       </div>
