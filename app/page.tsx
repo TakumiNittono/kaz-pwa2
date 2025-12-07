@@ -193,13 +193,14 @@ export default function Home() {
               }}
               className="relative inline-flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg hover:border-[#00f0ff]/50 transition-all"
             >
-              <Bell className="w-5 h-5 text-[#00f0ff]" />
+              <Bell className="w-8 h-8 text-[#00f0ff]" />
+              <span className="text-white">free session</span>
             </button>
           </div>
         )}
 
         {/* Main content */}
-        <Bell className="w-24 h-24 text-[#00f0ff] mx-auto mb-6" />
+        <Bell className="w-16 h-16 text-[#00f0ff] mx-auto mb-6" />
         <h1 className="text-2xl font-bold mb-4">free session</h1>
         <p className="text-gray-400 mb-8 text-sm">
           Add to home screen and use as an app
