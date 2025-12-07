@@ -78,7 +78,7 @@ export default function Home() {
         await waitForOneSignal()
 
         // Wait a bit before checking status (wait for initialization to complete)
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        await new Promise((resolve) => setTimeout(resolve, 3000))
 
         // Check if notifications are already permitted
         try {
@@ -88,10 +88,10 @@ export default function Home() {
               // Already subscribed - just update state but don't show message
               setIsSubscribed(true)
               setIsInitialized(true)
-              // Show completion message after 20 seconds
+              // Show completion message after 15 seconds
               setTimeout(() => {
                 setShowCompletionMessage(true)
-              }, 20000)
+              }, 15000)
               return
             }
             setIsInitialized(true)
@@ -153,10 +153,10 @@ export default function Home() {
                 // AND we've waited at least 15 seconds
                 if (permissionGranted) {
                   setIsSubscribed(true)
-                  // Show completion message after 20 seconds
+                  // Show completion message after 15 seconds
                   setTimeout(() => {
                     setShowCompletionMessage(true)
-                  }, 20000)
+                  }, 15000)
                   // Don't redirect - keep showing loading screen
                   // User can stay on this page waiting for notifications
                 }
