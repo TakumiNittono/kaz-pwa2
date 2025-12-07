@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { Bell, Check } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Bell } from 'lucide-react'
 
 declare global {
   interface Window {
@@ -13,13 +11,9 @@ declare global {
 }
 
 export default function Home() {
-  const router = useRouter()
   const [isInitialized, setIsInitialized] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState('')
   const [isPwa, setIsPwa] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
   const [hasShownPushPrimer, setHasShownPushPrimer] = useState(false)
 
   // Check PWA mode
@@ -93,30 +87,6 @@ export default function Home() {
               // Already subscribed - just update state but don't show message
               setIsSubscribed(true)
               setIsInitialized(true)
-              
-              // Get Player ID and save to Supabase silently
-              let playerId = null
-              for (let i = 0; i < 3; i++) {
-                try {
-                  playerId = await window.OneSignal.User.PushSubscription.id
-                  if (playerId) break
-                } catch (error) {
-                  // Ignore errors and retry
-                }
-                if (i < 2) {
-                  await new Promise((resolve) => setTimeout(resolve, 1000))
-                }
-              }
-
-              if (playerId) {
-                const supabase = createClient()
-                await supabase
-                  .from('profiles')
-                  .upsert(
-                    { onesignal_id: playerId },
-                    { onConflict: 'onesignal_id' }
-                  )
-              }
               return
             }
             setIsInitialized(true)
@@ -181,33 +151,8 @@ export default function Home() {
                 // AND we've waited at least 15 seconds
                 if (permissionGranted) {
                   setIsSubscribed(true)
-                  
-                  // Get Player ID and save to Supabase
-                  let playerId = null
-                  for (let i = 0; i < 3; i++) {
-                    try {
-                      playerId = await window.OneSignal.User.PushSubscription.id
-                      if (playerId) break
-                    } catch (error) {
-                      // Ignore errors and retry
-                    }
-                    if (i < 2) {
-                      await new Promise((resolve) => setTimeout(resolve, 1000))
-                    }
-                  }
-
-                  if (playerId) {
-                    const supabase = createClient()
-                    await supabase
-                      .from('profiles')
-                      .upsert(
-                        { onesignal_id: playerId },
-                        { onConflict: 'onesignal_id' }
-                      )
-                    
-                    // Don't redirect - keep showing loading screen
-                    // User can stay on this page waiting for notifications
-                  }
+                  // Don't redirect - keep showing loading screen
+                  // User can stay on this page waiting for notifications
                 }
               } catch (error: any) {
                 // Ignore errors (domain configuration or user denied)
@@ -228,151 +173,7 @@ export default function Home() {
     }
 
     checkOneSignalStatus()
-  }, [isPwa])
-
-  // Fetch unread notification count
-  useEffect(() => {
-    if (!isPwa || !isSubscribed) return
-
-    const fetchUnreadCount = async () => {
-      try {
-        await waitForOneSignal()
-
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-
-        if (!window.OneSignal) return
-
-        let playerId: string | null = null
-        try {
-          playerId = await window.OneSignal.User.PushSubscription.id
-        } catch (error) {
-          return
-        }
-
-        if (!playerId) return
-
-        const response = await fetch(
-          `/api/notifications?onesignal_id=${encodeURIComponent(playerId)}`
-        )
-
-        if (response.ok) {
-          const data = await response.json()
-          setUnreadCount(data.unreadCount || 0)
-        }
-      } catch (error) {
-        console.error('Failed to fetch unread count:', error)
-      }
-    }
-
-    fetchUnreadCount()
-    // Update every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000)
-    return () => clearInterval(interval)
-  }, [isPwa, isSubscribed])
-
-  const handleSubscribe = async () => {
-    setIsLoading(true)
-    setMessage('')
-
-    try {
-      // Check if OneSignal is available
-      await waitForOneSignal()
-      
-      if (!window.OneSignal) {
-        setMessage('Notification service is being prepared. Please wait a moment and try again.')
-        setIsLoading(false)
-        return
-      }
-
-      // Request notification permission
-      try {
-        await window.OneSignal.Slidedown.promptPush()
-      } catch (error: any) {
-        // Show user-friendly message for domain configuration errors
-        if (error?.message?.includes('Can only be used on')) {
-          setMessage('Notification feature is currently being prepared. Please wait a moment.')
-          setIsLoading(false)
-          return
-        }
-        throw error
-      }
-
-      // Wait a bit before checking permission status
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Check if permission was granted
-      let permission = false
-      try {
-        permission = await window.OneSignal.Notifications.permissionNative
-      } catch (error) {
-        // Ignore errors
-      }
-      
-      if (!permission) {
-        setMessage('Notification permission was not granted. Please enable notifications in your settings.')
-        setIsLoading(false)
-        return
-      }
-
-      // Get Player ID (retry multiple times)
-      let playerId = null
-      for (let i = 0; i < 3; i++) {
-        try {
-          playerId = await window.OneSignal.User.PushSubscription.id
-          if (playerId) break
-        } catch (error) {
-          // Ignore errors and retry
-        }
-        if (i < 2) {
-          await new Promise((resolve) => setTimeout(resolve, 1000))
-        }
-      }
-
-      if (!playerId) {
-        setMessage('Notification feature is currently being prepared. Please wait a moment.')
-        setIsLoading(false)
-        return
-      }
-
-      // Save to Supabase
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(
-          { onesignal_id: playerId },
-          { onConflict: 'onesignal_id' }
-        )
-
-      if (error) {
-        console.error('Supabase error:', error)
-        setMessage('Registration failed. Please try again.')
-        setIsLoading(false)
-        return
-      }
-
-      setIsSubscribed(true)
-      setMessage('Registered successfully!')
-      
-      // Redirect to specified URL after notification permission (after showing alert)
-      // Security check: only redirect to allowed domains
-      const redirectUrl = 'https://utage-system.com/p/zwvVkDBzc2wb'
-      if (redirectUrl.startsWith('https://')) {
-        // Show success message before redirecting (wait 1 second)
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        window.location.href = redirectUrl
-      }
-    } catch (error: any) {
-      // Show user-friendly message for domain configuration errors
-      if (error?.message?.includes('Can only be used on')) {
-        setMessage('Notification feature is currently being prepared. Please wait a moment.')
-      } else {
-        console.error('Subscribe error:', error)
-        setMessage('An error occurred during notification registration. Please try again.')
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  }, [isPwa, hasShownPushPrimer])
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
@@ -387,11 +188,6 @@ export default function Home() {
               className="relative inline-flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg hover:border-[#00f0ff]/50 transition-all"
             >
               <Bell className="w-5 h-5 text-[#00f0ff]" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#00f0ff] text-black text-xs font-bold rounded-full flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
             </button>
           </div>
         )}
@@ -402,19 +198,6 @@ export default function Home() {
         <p className="text-gray-400 mb-8 text-sm">
           Add to home screen and use as an app
         </p>
-
-        {/* Message display */}
-        {message && (
-          <div
-            className={`mb-6 p-4 rounded-lg ${
-              message.includes('success') || message.includes('Registered')
-                ? 'bg-green-900/50 border border-green-500/50 text-green-300'
-                : 'bg-red-900/50 border border-red-500/50 text-red-300'
-            }`}
-          >
-            {message}
-          </div>
-        )}
 
         {/* Show loading message while processing in PWA mode */}
         {/* Keep showing loading screen even after registration - waiting for notifications */}
