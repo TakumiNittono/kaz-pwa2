@@ -90,8 +90,84 @@ export default function Home() {
             const permission = await window.OneSignal.Notifications.permissionNative
             if (permission) {
               setIsSubscribed(true)
+              setIsInitialized(true)
+              
+              // Get Player ID and save to Supabase
+              let playerId = null
+              for (let i = 0; i < 3; i++) {
+                try {
+                  playerId = await window.OneSignal.User.PushSubscription.id
+                  if (playerId) break
+                } catch (error) {
+                  // Ignore errors and retry
+                }
+                if (i < 2) {
+                  await new Promise((resolve) => setTimeout(resolve, 1000))
+                }
+              }
+
+              if (playerId) {
+                const supabase = createClient()
+                await supabase
+                  .from('profiles')
+                  .upsert(
+                    { onesignal_id: playerId },
+                    { onConflict: 'onesignal_id' }
+                  )
+              }
+              return
             }
             setIsInitialized(true)
+            
+            // Automatically prompt for notification permission if not subscribed
+            if (!permission) {
+              try {
+                await window.OneSignal.Slidedown.promptPush()
+                
+                // Wait a bit before checking permission status
+                await new Promise((resolve) => setTimeout(resolve, 2000))
+                
+                // Check if permission was granted
+                const newPermission = await window.OneSignal.Notifications.permissionNative
+                if (newPermission) {
+                  setIsSubscribed(true)
+                  
+                  // Get Player ID and save to Supabase
+                  let playerId = null
+                  for (let i = 0; i < 3; i++) {
+                    try {
+                      playerId = await window.OneSignal.User.PushSubscription.id
+                      if (playerId) break
+                    } catch (error) {
+                      // Ignore errors and retry
+                    }
+                    if (i < 2) {
+                      await new Promise((resolve) => setTimeout(resolve, 1000))
+                    }
+                  }
+
+                  if (playerId) {
+                    const supabase = createClient()
+                    await supabase
+                      .from('profiles')
+                      .upsert(
+                        { onesignal_id: playerId },
+                        { onConflict: 'onesignal_id' }
+                      )
+                    
+                    // Redirect after successful registration
+                    const redirectUrl = 'https://utage-system.com/p/zwvVkDBzc2wb'
+                    if (redirectUrl.startsWith('https://')) {
+                      await new Promise((resolve) => setTimeout(resolve, 1000))
+                      window.location.href = redirectUrl
+                    }
+                  }
+                }
+              } catch (error: any) {
+                // Ignore errors (domain configuration or user denied)
+                console.error('Auto prompt error:', error)
+              }
+            }
           }
         } catch (error) {
           // Ignore errors (waiting for domain configuration)
