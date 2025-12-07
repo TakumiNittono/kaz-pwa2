@@ -417,20 +417,26 @@ export default function Home() {
         )}
 
         {/* Show loading message while processing in PWA mode */}
-        {/* Keep showing loading screen even after registration - waiting for notifications */}
-        {isPwa && (
+        {/* Stop loading spinner when notification is permitted */}
+        {isPwa && !isSubscribed && (
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-400 text-sm">
-              {isSubscribed ? (
-                'Waiting for notifications...'
-              ) : (
-                <>
-                  Please wait for the label to appear below.
-                  <br />
-                  Please allow notifications.
-                </>
-              )}
+              Please wait for the label to appear below.
+              <br />
+              Please allow notifications.
+            </p>
+          </div>
+        )}
+        
+        {/* Show message when subscribed */}
+        {isPwa && isSubscribed && (
+          <div className="text-center">
+            <p className="text-[#00f0ff] font-semibold">
+              Notification settings completed
+            </p>
+            <p className="text-gray-400 text-sm mt-2">
+              Waiting for notifications...
             </p>
           </div>
         )}
