@@ -90,8 +90,8 @@ export default function Home() {
           if (window.OneSignal) {
             const permission = await window.OneSignal.Notifications.permissionNative
             if (permission) {
-              // Already subscribed - but keep showing loading screen
-              // Don't set isSubscribed to true to keep loading screen visible
+              // Already subscribed - just update state but don't show message
+              setIsSubscribed(true)
               setIsInitialized(true)
               
               // Get Player ID and save to Supabase silently
@@ -117,7 +117,6 @@ export default function Home() {
                     { onConflict: 'onesignal_id' }
                   )
               }
-              // Don't set isSubscribed to true - keep loading screen visible
               return
             }
             setIsInitialized(true)
