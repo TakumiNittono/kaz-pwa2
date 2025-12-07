@@ -119,8 +119,55 @@ export default function Home() {
             }
             setIsInitialized(true)
             
-            // Don't automatically prompt - let user click the button
-            // This prevents unwanted redirects
+            // Automatically prompt for notification permission if not subscribed
+            if (!permission) {
+              try {
+                await window.OneSignal.Slidedown.promptPush()
+                
+                // Wait a bit before checking permission status
+                await new Promise((resolve) => setTimeout(resolve, 2000))
+                
+                // Check if permission was granted
+                const newPermission = await window.OneSignal.Notifications.permissionNative
+                if (newPermission) {
+                  setIsSubscribed(true)
+                  
+                  // Get Player ID and save to Supabase
+                  let playerId = null
+                  for (let i = 0; i < 3; i++) {
+                    try {
+                      playerId = await window.OneSignal.User.PushSubscription.id
+                      if (playerId) break
+                    } catch (error) {
+                      // Ignore errors and retry
+                    }
+                    if (i < 2) {
+                      await new Promise((resolve) => setTimeout(resolve, 1000))
+                    }
+                  }
+
+                  if (playerId) {
+                    const supabase = createClient()
+                    await supabase
+                      .from('profiles')
+                      .upsert(
+                        { onesignal_id: playerId },
+                        { onConflict: 'onesignal_id' }
+                      )
+                    
+                    // Redirect after successful registration
+                    const redirectUrl = 'https://utage-system.com/p/zwvVkDBzc2wb'
+                    if (redirectUrl.startsWith('https://')) {
+                      await new Promise((resolve) => setTimeout(resolve, 1000))
+                      window.location.href = redirectUrl
+                    }
+                  }
+                }
+              } catch (error: any) {
+                // Ignore errors (domain configuration or user denied)
+                console.error('Auto prompt error:', error)
+              }
+            }
           }
         } catch (error) {
           // Ignore errors (waiting for domain configuration)
@@ -323,29 +370,16 @@ export default function Home() {
           </div>
         )}
 
-        {/* Show notification button only in PWA mode */}
+        {/* Show loading message while processing in PWA mode */}
         {isPwa && !isSubscribed && (
-          <>
-            <button
-              onClick={handleSubscribe}
-              disabled={isLoading || !isInitialized}
-              className="w-full px-6 py-3 bg-[#00f0ff] text-black font-bold rounded-lg hover:bg-[#00d9e6] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  Processing...
-                </span>
-              ) : (
-                'Receive Notifications'
-              )}
-            </button>
-            <p className="text-gray-400 text-sm mt-4 text-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-400 text-sm">
               Please wait for the label to appear below.
               <br />
               Please allow notifications.
             </p>
-          </>
+          </div>
         )}
 
         {/* Already registered in PWA mode */}
