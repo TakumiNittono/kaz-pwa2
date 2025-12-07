@@ -205,13 +205,8 @@ export default function Home() {
                         { onConflict: 'onesignal_id' }
                       )
                     
-                    // Redirect after successful registration (page refresh)
-                    // Only redirect if permission was granted AND we've waited
-                    const redirectUrl = 'https://utage-system.com/p/zwvVkDBzc2wb'
-                    if (redirectUrl.startsWith('https://')) {
-                      await new Promise((resolve) => setTimeout(resolve, 1000))
-                      window.location.href = redirectUrl
-                    }
+                    // Don't redirect - keep showing loading screen
+                    // User can stay on this page waiting for notifications
                   }
                 }
               } catch (error: any) {
@@ -422,19 +417,23 @@ export default function Home() {
         )}
 
         {/* Show loading message while processing in PWA mode */}
-        {isPwa && !isSubscribed && (
+        {/* Keep showing loading screen even after registration - waiting for notifications */}
+        {isPwa && (
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-400 text-sm">
-              Please wait for the label to appear below.
-              <br />
-              Please allow notifications.
+              {isSubscribed ? (
+                'Waiting for notifications...'
+              ) : (
+                <>
+                  Please wait for the label to appear below.
+                  <br />
+                  Please allow notifications.
+                </>
+              )}
             </p>
           </div>
         )}
-
-        {/* Already registered in PWA mode - don't show message if already subscribed */}
-        {/* Message is only shown after user explicitly subscribes */}
 
         {/* Browser mode */}
         {!isPwa && (
