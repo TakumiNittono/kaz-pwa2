@@ -203,7 +203,7 @@ export default function Home() {
         <Bell className="w-16 h-16 text-[#00f0ff] mx-auto mb-6" />
         <h1 className="text-2xl font-bold mb-4">free session</h1>
         <p className="text-gray-400 mb-8 text-sm">
-          Add to home screen and use as an app
+          Allow notifications and receive your free session
         </p>
 
         {/* Show loading message while processing in PWA mode */}
