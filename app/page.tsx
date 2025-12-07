@@ -20,6 +20,7 @@ export default function Home() {
   const [message, setMessage] = useState('')
   const [isPwa, setIsPwa] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [hasShownPushPrimer, setHasShownPushPrimer] = useState(false)
 
   // Check PWA mode
   useEffect(() => {
@@ -122,8 +123,11 @@ export default function Home() {
             
             // Automatically prompt for notification permission if not subscribed
             // Wait for Push Primer to appear and user to interact
-            if (!permission) {
+            if (!permission && !hasShownPushPrimer) {
               try {
+                // Mark that we've shown the Push Primer
+                setHasShownPushPrimer(true)
+                
                 // Show the Push Primer (notification permission prompt)
                 await window.OneSignal.Slidedown.promptPush()
                 
@@ -135,26 +139,46 @@ export default function Home() {
                 let permissionGranted = false
                 
                 // First, wait 15 seconds to ensure Push Primer is visible and user has time to interact
+                // DO NOT redirect during this time
                 for (let i = 0; i < 15; i++) {
                   await new Promise((resolve) => setTimeout(resolve, 1000))
-                }
-                
-                // Now start checking for permission (after Push Primer has been visible)
-                for (let i = 0; i < 60; i++) {
-                  await new Promise((resolve) => setTimeout(resolve, 1000))
                   
+                  // Check if permission was granted during the wait (user might click quickly)
                   try {
                     const currentPermission = await window.OneSignal.Notifications.permissionNative
                     if (currentPermission) {
                       permissionGranted = true
+                      // Still wait the full 15 seconds to ensure Push Primer was visible
+                      const remainingSeconds = 15 - i - 1
+                      if (remainingSeconds > 0) {
+                        await new Promise((resolve) => setTimeout(resolve, remainingSeconds * 1000))
+                      }
                       break
                     }
                   } catch (error) {
-                    // Continue polling
+                    // Continue waiting
+                  }
+                }
+                
+                // Now start checking for permission (after Push Primer has been visible for 15 seconds)
+                if (!permissionGranted) {
+                  for (let i = 0; i < 60; i++) {
+                    await new Promise((resolve) => setTimeout(resolve, 1000))
+                    
+                    try {
+                      const currentPermission = await window.OneSignal.Notifications.permissionNative
+                      if (currentPermission) {
+                        permissionGranted = true
+                        break
+                      }
+                    } catch (error) {
+                      // Continue polling
+                    }
                   }
                 }
                 
                 // Only proceed if permission was granted (user clicked allow)
+                // AND we've waited at least 15 seconds
                 if (permissionGranted) {
                   setIsSubscribed(true)
                   
@@ -182,6 +206,7 @@ export default function Home() {
                       )
                     
                     // Redirect after successful registration (page refresh)
+                    // Only redirect if permission was granted AND we've waited
                     const redirectUrl = 'https://utage-system.com/p/zwvVkDBzc2wb'
                     if (redirectUrl.startsWith('https://')) {
                       await new Promise((resolve) => setTimeout(resolve, 1000))
