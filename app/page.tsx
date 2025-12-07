@@ -211,8 +211,13 @@ export default function Home() {
         {isPwa && (
           <div className="text-center">
             {showCompletionMessage ? (
-              <div className="mb-6 p-4 rounded-lg bg-green-900/50 border border-green-500/50 text-green-300">
-                Notification Complete
+              <div>
+                <div className="mb-6 p-4 rounded-lg bg-green-900/50 border border-green-500/50 text-green-300">
+                  Notification Complete
+                </div>
+                <p className="text-gray-400 text-sm">
+                  Click "free session" at the top right
+                </p>
               </div>
             ) : (
               <>
