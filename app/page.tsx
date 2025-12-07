@@ -78,7 +78,7 @@ export default function Home() {
         await waitForOneSignal()
 
         // Wait a bit before checking status (wait for initialization to complete)
-        await new Promise((resolve) => setTimeout(resolve, 2000))
+        await new Promise((resolve) => setTimeout(resolve, 500))
 
         // Check if notifications are already permitted
         try {
@@ -88,10 +88,10 @@ export default function Home() {
               // Already subscribed - just update state but don't show message
               setIsSubscribed(true)
               setIsInitialized(true)
-              // Show completion message after 30 seconds
+              // Show completion message after 20 seconds
               setTimeout(() => {
                 setShowCompletionMessage(true)
-              }, 30000)
+              }, 20000)
               return
             }
             setIsInitialized(true)
@@ -105,9 +105,6 @@ export default function Home() {
                 
                 // Show the Push Primer (notification permission prompt)
                 await window.OneSignal.Slidedown.promptPush()
-                
-                // Wait a bit for Push Primer to fully appear
-                await new Promise((resolve) => setTimeout(resolve, 500))
                 
                 // Wait for user to interact with the Push Primer
                 // Poll for permission change - keep checking until permission is granted or timeout
@@ -156,10 +153,10 @@ export default function Home() {
                 // AND we've waited at least 15 seconds
                 if (permissionGranted) {
                   setIsSubscribed(true)
-                  // Show completion message after 30 seconds
+                  // Show completion message after 20 seconds
                   setTimeout(() => {
                     setShowCompletionMessage(true)
-                  }, 30000)
+                  }, 20000)
                   // Don't redirect - keep showing loading screen
                   // User can stay on this page waiting for notifications
                 }
