@@ -67,19 +67,25 @@ export default function RootLayout({
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
           strategy="afterInteractive"
         />
-        <Script id="onesignal-init" strategy="afterInteractive">
-          {`
-            window.OneSignalDeferred = window.OneSignalDeferred || [];
-            OneSignalDeferred.push(async function(OneSignal) {
-              await OneSignal.init({
-                appId: "${appId}",
-                allowLocalhostAsSecureOrigin: true,
-                serviceWorkerParam: { scope: "/" },
-                serviceWorkerPath: "/OneSignalSDKWorker.js",
+        {appId && (
+          <Script id="onesignal-init" strategy="afterInteractive">
+            {`
+              window.OneSignalDeferred = window.OneSignalDeferred || [];
+              OneSignalDeferred.push(async function(OneSignal) {
+                try {
+                  await OneSignal.init({
+                    appId: "${appId}",
+                    allowLocalhostAsSecureOrigin: true,
+                    serviceWorkerParam: { scope: "/" },
+                    serviceWorkerPath: "/OneSignalSDKWorker.js",
+                  });
+                } catch (error) {
+                  console.error('OneSignal initialization error:', error);
+                }
               });
-            });
-          `}
-        </Script>
+            `}
+          </Script>
+        )}
         {children}
         <PWAInstall />
         <RegisterSW />
