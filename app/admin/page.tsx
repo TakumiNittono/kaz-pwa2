@@ -88,12 +88,12 @@ export default function AdminDashboard() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || '通知の送信に失敗しました')
+        throw new Error(data.error || 'Failed to send notification')
       }
 
       setStatus({
         type: 'success',
-        message: '通知の送信が完了しました！',
+        message: 'Notification sent successfully!',
       })
       setTitle('')
       setMessage('')
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
       console.error('Send notification error:', error)
       setStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : '通知の送信中にエラーが発生しました。',
+        message: error instanceof Error ? error.message : 'An error occurred while sending notification.',
       })
     } finally {
       setIsLoading(false)
@@ -127,19 +127,19 @@ export default function AdminDashboard() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'ステップ配信の実行に失敗しました')
+        throw new Error(data.error || 'Failed to run step mail')
       }
 
       setStepMailResult(data)
       setStatus({
         type: 'success',
-        message: 'ステップ配信が完了しました！',
+        message: 'Step mail completed successfully!',
       })
     } catch (error) {
       console.error('Run step mail error:', error)
       setStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : 'ステップ配信の実行にエラーが発生しました。',
+        message: error instanceof Error ? error.message : 'An error occurred while running step mail.',
       })
     } finally {
       setIsRunningStepMail(false)
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
   }
 
   const handleMigrateNotifications = async () => {
-    if (!confirm('過去の通知履歴を全ユーザーの通知履歴に移行しますか？\nこの処理には時間がかかる場合があります。')) {
+    if (!confirm('Migrate past notification history to all users\' notification history?\nThis process may take some time.')) {
       return
     }
 
@@ -162,19 +162,19 @@ export default function AdminDashboard() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || '通知の移行に失敗しました')
+        throw new Error(data.error || 'Failed to migrate notifications')
       }
 
       setMigrateResult(data)
       setStatus({
         type: 'success',
-        message: `通知の移行が完了しました！${data.insertedCount || 0}件の通知履歴を追加しました。`,
+        message: `Notification migration completed! Added ${data.insertedCount || 0} notification history records.`,
       })
     } catch (error) {
       console.error('Migrate notifications error:', error)
       setStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : '通知の移行にエラーが発生しました。',
+        message: error instanceof Error ? error.message : 'An error occurred while migrating notifications.',
       })
     } finally {
       setIsMigrating(false)
@@ -183,7 +183,7 @@ export default function AdminDashboard() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleString('ja-JP', {
+    return date.toLocaleString('en-US', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -199,21 +199,21 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">管理者ダッシュボード</h1>
-              <p className="text-gray-600 mt-1">全ユーザーへの一斉通知を送信</p>
+              <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+              <p className="text-gray-600 mt-1">Send notifications to all users</p>
             </div>
             <button
               onClick={handleLogout}
               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors duration-200"
             >
-              ログアウト
+              Logout
             </button>
           </div>
         </div>
 
         {/* Notification Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">通知を送信</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Send Notification</h2>
 
           {status && (
             <div
@@ -230,7 +230,7 @@ export default function AdminDashboard() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                タイトル <span className="text-red-500">*</span>
+                Title <span className="text-red-500">*</span>
               </label>
               <input
                 id="title"
@@ -239,13 +239,13 @@ export default function AdminDashboard() {
                 onChange={(e) => setTitle(e.target.value)}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="例: 学習お疲れさまです！"
+                placeholder="e.g., Great job on your studies!"
               />
             </div>
 
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                本文 <span className="text-red-500">*</span>
+                Message <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="message"
@@ -254,7 +254,7 @@ export default function AdminDashboard() {
                 required
                 rows={6}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-none"
-                placeholder="例: 今日も1日お疲れさまです。継続は力なり、一緒に頑張りましょう！"
+                placeholder="e.g., Great work today! Consistency is key, let's keep going together!"
               />
             </div>
 
@@ -263,13 +263,13 @@ export default function AdminDashboard() {
               disabled={isLoading}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
             >
-              {isLoading ? '送信中...' : '通知を送信する'}
+              {isLoading ? 'Sending...' : 'Send Notification'}
             </button>
           </form>
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-800">
-              <strong>注意:</strong> この通知は、通知を許可した全ユーザーに配信されます。
+              <strong>Note:</strong> This notification will be sent to all users who have enabled notifications.
             </p>
           </div>
         </div>
@@ -277,7 +277,7 @@ export default function AdminDashboard() {
         {/* 統計情報ダッシュボード */}
         <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">統計情報</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Statistics</h2>
             <button
               onClick={() => {
                 setIsLoadingStats(true)
@@ -304,44 +304,44 @@ export default function AdminDashboard() {
               <div className="bg-blue-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm text-gray-600">今日</span>
+                  <span className="text-sm text-gray-600">Today</span>
                 </div>
                 <div className="text-2xl font-bold text-blue-600">{stats.today}</div>
-                <div className="text-xs text-gray-500">登録者</div>
+                <div className="text-xs text-gray-500">Users</div>
               </div>
               <div className="bg-green-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">今週</span>
+                  <span className="text-sm text-gray-600">This Week</span>
                 </div>
                 <div className="text-2xl font-bold text-green-600">{stats.week}</div>
-                <div className="text-xs text-gray-500">登録者</div>
+                <div className="text-xs text-gray-500">Users</div>
               </div>
               <div className="bg-purple-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="w-5 h-5 text-purple-600" />
-                  <span className="text-sm text-gray-600">今月</span>
+                  <span className="text-sm text-gray-600">This Month</span>
                 </div>
                 <div className="text-2xl font-bold text-purple-600">{stats.month}</div>
-                <div className="text-xs text-gray-500">登録者</div>
+                <div className="text-xs text-gray-500">Users</div>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm text-gray-600">総数</span>
+                  <span className="text-sm text-gray-600">Total</span>
                 </div>
                 <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
-                <div className="text-xs text-gray-500">登録者</div>
+                <div className="text-xs text-gray-500">Users</div>
               </div>
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">データを読み込み中...</div>
+            <div className="text-center py-8 text-gray-500">Loading data...</div>
           )}
 
           {/* 日別登録者数の簡易表示 */}
           {stats && (
             <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-3">過去30日の登録者数</h3>
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Registrations in the Past 30 Days</h3>
               <div className="bg-gray-50 rounded-lg p-4 max-h-48 overflow-y-auto">
                 <div className="space-y-2">
                   {Object.entries(stats.dailyRegistrations)
@@ -350,7 +350,7 @@ export default function AdminDashboard() {
                     .map(([date, count]) => (
                       <div key={date} className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">{date}</span>
-                        <span className="font-semibold text-gray-800">{count}人</span>
+                        <span className="font-semibold text-gray-800">{count} users</span>
                       </div>
                     ))}
                 </div>
@@ -361,14 +361,14 @@ export default function AdminDashboard() {
 
         {/* 通知履歴の移行 */}
         <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">通知履歴の移行</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Notification History Migration</h2>
           <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800 font-semibold mb-1">
-              ⚠️ 過去の通知履歴を移行
+              ⚠️ Migrate Past Notification History
             </p>
             <p className="text-xs text-yellow-700">
-              `notifications`テーブルに保存されている過去の通知を、全ユーザーの`user_notifications`テーブルに移行します。
-              これにより、アプリの通知履歴ページに過去の通知が表示されるようになります。
+              Migrate past notifications stored in the `notifications` table to all users' `user_notifications` table.
+              This will make past notifications appear on the app's notification history page.
             </p>
           </div>
           <button
@@ -379,12 +379,12 @@ export default function AdminDashboard() {
             {isMigrating ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                移行中...
+                Migrating...
               </>
             ) : (
               <>
                 <RefreshCw className="w-5 h-5" />
-                過去の通知履歴を移行
+                Migrate Past Notification History
               </>
             )}
           </button>
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
                   ? 'text-green-800' 
                   : 'text-yellow-800'
               }`}>
-                移行結果
+                Migration Result
               </h3>
               {migrateResult.message && (
                 <p className={`text-sm mb-2 ${
@@ -416,11 +416,11 @@ export default function AdminDashboard() {
                   ? 'text-green-700' 
                   : 'text-yellow-700'
               }`}>
-                <p>通知数: {migrateResult.notificationsCount || 0}件</p>
-                <p>ユーザー数: {migrateResult.usersCount || 0}人</p>
-                <p>追加された通知履歴: {migrateResult.insertedCount || 0}件</p>
+                <p>Notifications: {migrateResult.notificationsCount || 0}</p>
+                <p>Users: {migrateResult.usersCount || 0}</p>
+                <p>Added Notification History: {migrateResult.insertedCount || 0}</p>
                 {migrateResult.totalRecords !== undefined && migrateResult.totalRecords > 0 && (
-                  <p>重複を除いた件数: {migrateResult.totalRecords}件</p>
+                  <p>Total Records (excluding duplicates): {migrateResult.totalRecords}</p>
                 )}
               </div>
             </div>
@@ -429,17 +429,17 @@ export default function AdminDashboard() {
 
         {/* ステップ配信の手動実行 */}
         <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">ステップ配信</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Step Mail</h2>
           <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-sm text-green-800 font-semibold mb-1">
-              ✓ 自動実行が有効です
+              ✓ Auto-execution is enabled
             </p>
             <p className="text-xs text-green-700">
-              毎日UTC 22:00（日本時間 07:00）に自動的に実行されます。8つの時間ウィンドウ（1時間後、1日後、2日後...7日後）のユーザーに通知を送信します。
+              Automatically runs daily at UTC 22:00 (JST 07:00). Sends notifications to users in 8 time windows (1 hour later, 1 day later, 2 days later... 7 days later).
             </p>
           </div>
           <p className="text-gray-600 mb-4 text-sm">
-            テストや緊急時には、下のボタンで手動実行も可能です。
+            For testing or emergencies, you can also run it manually using the button below.
           </p>
           <button
             onClick={handleRunStepMail}
@@ -449,29 +449,29 @@ export default function AdminDashboard() {
             {isRunningStepMail ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                実行中...
+                Running...
               </>
             ) : (
               <>
                 <Play className="w-5 h-5" />
-                ステップ配信を実行
+                Run Step Mail
               </>
             )}
           </button>
 
           {stepMailResult && (
             <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h3 className="font-semibold text-green-800 mb-2">実行結果</h3>
+              <h3 className="font-semibold text-green-800 mb-2">Execution Result</h3>
               <div className="text-sm text-green-700 space-y-1">
-                <p>メッセージ: {stepMailResult.message}</p>
-                <p>総送信数: {stepMailResult.totalCount || 0}件</p>
+                <p>Message: {stepMailResult.message}</p>
+                <p>Total Sent: {stepMailResult.totalCount || 0}</p>
                 {stepMailResult.results && (
                   <div className="mt-2">
-                    <p className="font-semibold mb-1">各ステップの結果:</p>
+                    <p className="font-semibold mb-1">Results by Step:</p>
                     <div className="space-y-1">
                       {stepMailResult.results.map((result: any, index: number) => (
                         <p key={index} className="text-xs">
-                          {result.step}: {result.count}件
+                          {result.step}: {result.count}
                         </p>
                       ))}
                     </div>
@@ -484,16 +484,16 @@ export default function AdminDashboard() {
 
         {/* 最近の登録者リスト */}
         <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">最近の登録者</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Recent Users</h2>
           {recentUsers.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">登録者はいません</div>
+            <div className="text-center py-8 text-gray-500">No users registered</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Player ID</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">登録日時</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Registration Date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -515,14 +515,14 @@ export default function AdminDashboard() {
 
         {/* 登録者総数表示（既存） */}
         <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">登録者情報</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">User Information</h2>
           <div className="flex items-center gap-4">
             <div className="text-4xl font-bold text-blue-600">
               {totalUsers !== null ? totalUsers.toLocaleString() : '---'}
             </div>
             <div className="text-gray-600">
-              <p className="text-lg font-medium">登録者総数</p>
-              <p className="text-sm">通知を許可したユーザー数</p>
+              <p className="text-lg font-medium">Total Users</p>
+              <p className="text-sm">Number of users who enabled notifications</p>
             </div>
           </div>
         </div>

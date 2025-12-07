@@ -1,7 +1,7 @@
 {
-  "name": "コーチング通知アプリ",
-  "short_name": "通知アプリ",
-  "description": "プッシュ通知を受け取って、学習を継続しましょう",
+  "name": "Coaching Notification App",
+  "short_name": "Notification App",
+  "description": "Receive push notifications and continue learning",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",

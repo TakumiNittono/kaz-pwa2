@@ -68,7 +68,7 @@ export default function NotificationsPage() {
         )
 
         if (!response.ok) {
-          throw new Error('通知履歴の取得に失敗しました')
+          throw new Error('Failed to fetch notification history')
         }
 
         const data = await response.json()
@@ -100,7 +100,7 @@ export default function NotificationsPage() {
       })
 
       if (!response.ok) {
-        throw new Error('既読処理に失敗しました')
+        throw new Error('Failed to mark as read')
       }
 
       // ローカル状態を更新
@@ -142,13 +142,13 @@ export default function NotificationsPage() {
     const minutes = Math.floor(diff / (1000 * 60))
 
     if (days > 0) {
-      return `${days}日前`
+      return `${days} day${days > 1 ? 's' : ''} ago`
     } else if (hours > 0) {
-      return `${hours}時間前`
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`
     } else if (minutes > 0) {
-      return `${minutes}分前`
+      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
     } else {
-      return 'たった今'
+      return 'Just now'
     }
   }
 
@@ -164,10 +164,10 @@ export default function NotificationsPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h1 className="text-lg font-bold">通知履歴</h1>
+            <h1 className="text-lg font-bold">Notification History</h1>
             {unreadCount > 0 && (
               <p className="text-xs text-[#00f0ff] mt-1">
-                未読: {unreadCount}件
+                Unread: {unreadCount}
               </p>
             )}
           </div>
@@ -179,12 +179,12 @@ export default function NotificationsPage() {
         {isLoading ? (
           <div className="text-center py-12">
             <div className="w-6 h-6 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-gray-400 mt-4 text-sm">読み込み中...</p>
+            <p className="text-gray-400 mt-4 text-sm">Loading...</p>
           </div>
         ) : notifications.length === 0 ? (
           <div className="text-center py-12">
             <Bell className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">通知はありません</p>
+            <p className="text-gray-400">No notifications</p>
           </div>
         ) : (
           <div className="space-y-3">

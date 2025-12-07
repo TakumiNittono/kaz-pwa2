@@ -12,8 +12,8 @@ const notoSansJP = Noto_Sans_JP({
 })
 
 export const metadata: Metadata = {
-  title: 'コーチング通知アプリ',
-  description: 'プッシュ通知を受け取って、学習を継続しましょう',
+  title: 'Coaching Notification App',
+  description: 'Receive push notifications and continue learning',
   manifest: '/manifest.json',
   themeColor: '#00f0ff',
   icons: {
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'コーチング通知アプリ',
+    title: 'Coaching Notification App',
   },
   viewport: {
     width: 'device-width',
@@ -49,7 +49,7 @@ export default function RootLayout({
   const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || ''
 
   return (
-    <html lang="ja">
+    <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -60,7 +60,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="コーチング通知アプリ" />
+        <meta name="apple-mobile-web-app-title" content="Coaching Notification App" />
       </head>
       <body className={notoSansJP.className}>
         <Script

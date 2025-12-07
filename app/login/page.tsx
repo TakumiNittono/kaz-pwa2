@@ -25,19 +25,19 @@ export default function LoginPage() {
 
       if (signInError) {
         // エラーメッセージを詳細化
-        let errorMessage = 'メールアドレスまたはパスワードが正しくありません。'
+        let errorMessage = 'Email address or password is incorrect.'
         
         // メール確認が必要な場合
         if (signInError.message?.includes('Email not confirmed') || signInError.message?.includes('email_not_confirmed')) {
-          errorMessage = 'メールアドレスの確認が必要です。Supabaseダッシュボードで「Send confirmation email」をクリックするか、「Auto Confirm User」にチェックを入れてユーザーを再作成してください。'
+          errorMessage = 'Email confirmation is required. Click "Send confirmation email" in the Supabase dashboard or check "Auto Confirm User" and recreate the user.'
         }
         // パスワードが間違っている場合
         else if (signInError.message?.includes('Invalid login credentials') || signInError.message?.includes('invalid_credentials')) {
-          errorMessage = 'メールアドレスまたはパスワードが正しくありません。'
+          errorMessage = 'Email address or password is incorrect.'
         }
         // その他のエラー
         else {
-          errorMessage = `ログインエラー: ${signInError.message}`
+          errorMessage = `Login error: ${signInError.message}`
         }
         
         setError(errorMessage)
@@ -51,7 +51,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error('Login error:', err)
-      setError('ログイン中にエラーが発生しました。')
+      setError('An error occurred during login.')
       setIsLoading(false)
     }
   }
@@ -71,8 +71,8 @@ export default function LoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">管理者ログイン</h1>
-          <p className="text-gray-400">コーチング決して、通知管理システム</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Admin Login</h1>
+          <p className="text-gray-400">Coaching notification management system</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -84,7 +84,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              メールアドレス
+              Email Address
             </label>
             <input
               id="email"
@@ -99,7 +99,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              パスワード
+              Password
             </label>
             <input
               id="password"
@@ -120,16 +120,16 @@ export default function LoginPage() {
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                ログイン中...
+                Logging in...
               </span>
             ) : (
-              'ログイン'
+              'Login'
             )}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>管理者アカウントのみアクセス可能です。</p>
+          <p>Only admin accounts can access.</p>
         </div>
       </div>
     </div>

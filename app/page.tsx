@@ -157,7 +157,7 @@ export default function Home() {
       await waitForOneSignal()
       
       if (!window.OneSignal) {
-        setMessage('通知サービスを準備中です。しばらく待ってから再度お試しください。')
+        setMessage('Notification service is being prepared. Please wait a moment and try again.')
         setIsLoading(false)
         return
       }
@@ -168,7 +168,7 @@ export default function Home() {
       } catch (error: any) {
         // ドメイン設定エラーの場合は、ユーザーに分かりやすいメッセージを表示
         if (error?.message?.includes('Can only be used on')) {
-          setMessage('通知機能は現在準備中です。しばらくお待ちください。')
+          setMessage('Notification feature is currently being prepared. Please wait a moment.')
           setIsLoading(false)
           return
         }
@@ -187,7 +187,7 @@ export default function Home() {
       }
       
       if (!permission) {
-        setMessage('通知が許可されませんでした。設定から通知を許可してください。')
+        setMessage('Notification permission was not granted. Please enable notifications in your settings.')
         setIsLoading(false)
         return
       }
@@ -207,7 +207,7 @@ export default function Home() {
       }
 
       if (!playerId) {
-        setMessage('通知機能は現在準備中です。しばらくお待ちください。')
+        setMessage('Notification feature is currently being prepared. Please wait a moment.')
         setIsLoading(false)
         return
       }
@@ -223,13 +223,13 @@ export default function Home() {
 
       if (error) {
         console.error('Supabase error:', error)
-        setMessage('登録に失敗しました。もう一度お試しください。')
+        setMessage('Registration failed. Please try again.')
         setIsLoading(false)
         return
       }
 
       setIsSubscribed(true)
-      setMessage('登録しました！')
+      setMessage('Registered successfully!')
       
       // 通知許可後、指定のURLに遷移（アラート表示後に遷移）
       // セキュリティチェック: 許可されたドメインのみ遷移
@@ -242,10 +242,10 @@ export default function Home() {
     } catch (error: any) {
       // ドメイン設定エラーの場合は、ユーザーに分かりやすいメッセージを表示
       if (error?.message?.includes('Can only be used on')) {
-        setMessage('通知機能は現在準備中です。しばらくお待ちください。')
+        setMessage('Notification feature is currently being prepared. Please wait a moment.')
       } else {
         console.error('Subscribe error:', error)
-        setMessage('通知の登録中にエラーが発生しました。もう一度お試しください。')
+        setMessage('An error occurred during notification registration. Please try again.')
       }
     } finally {
       setIsLoading(false)
@@ -276,16 +276,16 @@ export default function Home() {
 
         {/* メインコンテンツ */}
         <Bell className="w-16 h-16 text-[#00f0ff] mx-auto mb-6" />
-        <h1 className="text-2xl font-bold mb-4">通知を受け取る</h1>
+        <h1 className="text-2xl font-bold mb-4">Receive Notifications</h1>
         <p className="text-gray-400 mb-8 text-sm">
-          ホーム画面に追加してアプリとして使用してください
+          Add to home screen and use as an app
         </p>
 
         {/* メッセージ表示 */}
         {message && (
           <div
             className={`mb-6 p-4 rounded-lg ${
-              message.includes('完了') || message.includes('登録')
+              message.includes('success') || message.includes('Registered')
                 ? 'bg-green-900/50 border border-green-500/50 text-green-300'
                 : 'bg-red-900/50 border border-red-500/50 text-red-300'
             }`}
@@ -304,10 +304,10 @@ export default function Home() {
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                処理中...
+                Processing...
               </span>
             ) : (
-              '通知を受け取る'
+              'Receive Notifications'
             )}
           </button>
         )}
@@ -317,7 +317,7 @@ export default function Home() {
           <div className="inline-block px-6 py-3 bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-lg">
             <p className="text-[#00f0ff] font-semibold flex items-center justify-center gap-2">
               <Check className="w-5 h-5" />
-              通知の設定が完了しています
+              Notification settings completed
             </p>
           </div>
         )}
@@ -326,9 +326,9 @@ export default function Home() {
         {!isPwa && (
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
             <p className="text-gray-400 text-sm">
-              通知機能はアプリ版限定です。
+              Notification features are limited to the app version.
               <br />
-              ブラウザのメニューから「ホーム画面に追加」してください。
+              Please "Add to Home Screen" from the browser menu.
             </p>
           </div>
         )}
